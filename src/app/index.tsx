@@ -1,98 +1,83 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Link } from "expo-router";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import {
+  componentRadius,
+  continuous,
+  layoutSpacing,
+  maxContentWidth,
+  minTouchTarget,
+  spacing,
+  type,
+  useTheme,
+} from "@/theme";
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+export default function Index() {
+  const { colors, shadows } = useTheme();
+  const insets = useSafeAreaInsets();
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+    <View
+      style={[
+        styles.screen,
+        { backgroundColor: colors.backgroundCanvas, paddingTop: insets.top },
+      ]}
+    >
+      <View style={styles.column}>
+        <Text style={[type.overline, styles.uppercase, { color: colors.accent }]}>DevHub</Text>
+        <Text style={[type.title1, { color: colors.textPrimary, marginTop: spacing.xs }]}>
+          Where builders talk shop
+        </Text>
+        <Text style={[type.body, { color: colors.textSecondary, marginTop: spacing.md }]}>
+          The design system is in place. Screens come next — start them from `@/theme` and they
+          will already be themed, in both schemes.
+        </Text>
 
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
-
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+        <Link href="/design-system" asChild>
+          {/*
+            Link clones its child, so that child gets a single flattened style —
+            an array here trips expo-router's <Slot> warning.
+          */}
+          <Pressable
+            accessibilityRole="button"
+            style={StyleSheet.flatten([
+              styles.cta,
+              continuous,
+              { backgroundColor: colors.accentSolid, boxShadow: shadows.accent },
+            ])}
+          >
+            <Text style={[type.subhead, { color: colors.onAccentSolid }]}>
+              View design tokens
+            </Text>
+          </Pressable>
+        </Link>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: layoutSpacing.screenX,
   },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+  column: {
+    width: "100%",
+    maxWidth: maxContentWidth,
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+  uppercase: {
+    textTransform: "uppercase",
   },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  cta: {
+    marginTop: layoutSpacing.sectionGap,
+    alignSelf: "flex-start",
+    minHeight: minTouchTarget,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.xl,
+    borderRadius: componentRadius.button,
   },
 });
