@@ -44,3 +44,8 @@ example
 
 .claude/
 .vscode/
+
+# Firebase client config (per-environment, never committed)
+google-services.json
+GoogleService-Info.plist
+.agents/
