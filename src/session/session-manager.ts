@@ -123,7 +123,7 @@ class SessionManager implements AccessTokenSource {
     } catch (error) {
       if (isApiError(error) && error.code === "SESSION_REPLACED") {
         await this.endSession("replaced", error.message, "refresh: session replaced");
-      } else if (isApiError(error) && (error.code === "INVALID_REFRESH_TOKEN" || error.status === 401)) {
+      } else if (isApiError(error) && error.status === 401 && error.code !== "UNEXPECTED") {
         await this.endSession("expired", null, `refresh rejected (${error.code})`);
       } else {
         this.store.set({ status: "signedIn", online: false });
