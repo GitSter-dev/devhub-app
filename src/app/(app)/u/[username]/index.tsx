@@ -13,6 +13,7 @@ export default function ProfileScreen() {
       }
       onEditProfile={() => router.push("/profile/edit")}
       onEditStack={() => router.push("/profile/stack")}
+      showPosts
     />
   );
 }

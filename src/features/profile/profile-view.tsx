@@ -1,9 +1,9 @@
 import * as WebBrowser from "expo-web-browser";
-import { useEffect, useState } from "react";
-import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useEffect } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { toApiError } from "@/api/api-error";
+import { fetchUserPosts } from "@/api/posts-api";
 import type { FollowList, Profile } from "@/api/profiles-api";
 import { AppText } from "@/components/app-text";
 import { Button } from "@/components/button";
@@ -13,14 +13,17 @@ import { ScreenHeader } from "@/components/screen-header";
 import { TopicChip } from "@/components/topic-chip";
 import { haptics } from "@/feedback/haptics";
 import { followSync, useFollowing } from "@/features/follows/follow-sync";
+import { NotificationsCard } from "@/features/home/notifications-card";
 import { FollowButton } from "@/features/people/person-row";
+import { PostList } from "@/features/posts/post-list";
+import { postKeys } from "@/features/posts/post-queries";
+import { sessionManager } from "@/session/session-manager";
 import {
   avatarSize,
   componentRadius,
   continuous,
   hitSlop,
   layoutSpacing,
-  maxContentWidth,
   spacing,
   useTheme,
 } from "@/theme";
@@ -34,65 +37,59 @@ type ProfileViewProps = {
   onOpenList?: (list: FollowList) => void;
   onEditProfile?: () => void;
   onEditStack?: () => void;
+  showPosts?: boolean;
 };
 
-export function ProfileView({ username, onOpenList, onEditProfile, onEditStack }: ProfileViewProps) {
-  const { colors } = useTheme();
-  const insets = useSafeAreaInsets();
+export function ProfileView({ username, onOpenList, onEditProfile, onEditStack, showPosts = false }: ProfileViewProps) {
   const profile = useProfile(username);
-  const [pulling, setPulling] = useState(false);
-
-  const refresh = () => {
-    setPulling(true);
-    void profile.refetch().finally(() => setPulling(false));
-  };
 
   return (
-    <ScrollView
-      style={{ backgroundColor: colors.backgroundCanvas }}
-      refreshControl={
-        <RefreshControl
-          refreshing={pulling}
-          onRefresh={refresh}
-          tintColor={colors.accent}
-          colors={[colors.accentSolid]}
-          progressBackgroundColor={colors.backgroundElevated}
-        />
-      }
-      contentContainerStyle={[styles.page, { paddingTop: insets.top + spacing.md, paddingBottom: insets.bottom + spacing.xxl }]}
-    >
-      <View style={styles.column}>
-        <ScreenHeader title={profile.data ? `@${profile.data.username}` : undefined} />
-        {profile.data ? (
-          <ProfileBody
-            profile={profile.data}
-            onOpenList={onOpenList}
-            onEditProfile={onEditProfile}
-            onEditStack={onEditStack}
-          />
-        ) : profile.error ? (
-          <View style={styles.state}>
-            <FormBanner
-              tone="error"
-              message={
-                toApiError(profile.error).code === "NOT_FOUND"
-                  ? "This developer doesn't exist or hasn't finished signing up."
-                  : toApiError(profile.error).message
-              }
+    <PostList
+      queryKey={postKeys.byUser(username)}
+      fetchPage={(cursor) => fetchUserPosts(sessionManager.client, username, cursor)}
+      enabled={showPosts && Boolean(profile.data)}
+      onRefresh={() => profile.refetch()}
+      empty="No posts yet."
+      header={
+        <View style={styles.column}>
+          <ScreenHeader title={profile.data ? `@${profile.data.username}` : undefined} />
+          {profile.data ? (
+            <ProfileBody
+              profile={profile.data}
+              onOpenList={onOpenList}
+              onEditProfile={onEditProfile}
+              onEditStack={onEditStack}
+              showPosts={showPosts}
             />
-            <Button label="Try again" variant="secondary" onPress={() => void profile.refetch()} />
-          </View>
-        ) : (
-          <View style={[styles.avatar, styles.skeleton, { backgroundColor: colors.backgroundSunken }]} />
-        )}
-      </View>
-    </ScrollView>
+          ) : profile.error ? (
+            <View style={styles.state}>
+              <FormBanner
+                tone="error"
+                message={
+                  toApiError(profile.error).code === "NOT_FOUND"
+                    ? "This developer doesn't exist or hasn't finished signing up."
+                    : toApiError(profile.error).message
+                }
+              />
+              <Button label="Try again" variant="secondary" onPress={() => void profile.refetch()} />
+            </View>
+          ) : (
+            <ProfileSkeleton />
+          )}
+        </View>
+      }
+    />
   );
+}
+
+function ProfileSkeleton() {
+  const { colors } = useTheme();
+  return <View style={[styles.avatar, styles.skeleton, { backgroundColor: colors.backgroundSunken }]} />;
 }
 
 type ProfileBodyProps = Omit<ProfileViewProps, "username"> & { profile: Profile };
 
-function ProfileBody({ profile, onOpenList, onEditProfile, onEditStack }: ProfileBodyProps) {
+function ProfileBody({ profile, onOpenList, onEditProfile, onEditStack, showPosts }: ProfileBodyProps) {
   const { colors, shadows } = useTheme();
   const following = useFollowing().get(profile.id) ?? profile.following;
   const followerCount = profile.followerCount + (following ? 1 : 0) - (profile.following ? 1 : 0);
@@ -198,6 +195,12 @@ function ProfileBody({ profile, onOpenList, onEditProfile, onEditStack }: Profil
           </AppText>
         )}
       </View>
+      {profile.me && <NotificationsCard />}
+      {showPosts && (
+        <AppText variant="overline" tone="accent" uppercase>
+          Posts
+        </AppText>
+      )}
     </View>
   );
 }
@@ -234,13 +237,7 @@ function LinkChip({ icon, label, url }: { icon: IconName; label: string; url: st
 }
 
 const styles = StyleSheet.create({
-  page: {
-    alignItems: "center",
-    paddingHorizontal: layoutSpacing.screenX,
-  },
   column: {
-    width: "100%",
-    maxWidth: maxContentWidth,
     gap: layoutSpacing.sectionGap,
   },
   body: {

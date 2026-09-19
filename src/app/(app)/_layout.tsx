@@ -8,7 +8,9 @@ export default function AppLayout() {
     <>
       <PushEffects />
       <RealtimeEffects />
-      <Stack screenOptions={{ headerShown: false }} />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="compose" options={{ presentation: "modal" }} />
+      </Stack>
     </>
   );
 }
