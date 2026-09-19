@@ -6,6 +6,8 @@ import { NotificationTapEffects } from "@/push/notification-taps";
 import { PushEffects } from "@/push/push-effects";
 import { RealtimeEffects } from "@/realtime/realtime-effects";
 
+export const unstable_settings = { anchor: "index" };
+
 export default function AppLayout() {
   return (
     <>
@@ -15,6 +17,7 @@ export default function AppLayout() {
       <NotificationEffects />
       <NotificationTapEffects />
       <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
         <Stack.Screen name="compose" options={{ presentation: "modal" }} />
       </Stack>
     </>
