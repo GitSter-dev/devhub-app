@@ -13,6 +13,7 @@ import { Stack, ThemeProvider as NavigationThemeProvider } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -20,7 +21,8 @@ import { queryClient } from "@/api/query-client";
 import { useHasSeenOnboarding } from "@/onboarding/onboarding-store";
 import { SessionEffects } from "@/session/session-effects";
 import { useSessionState } from "@/session/use-session";
-import { navigationTheme, ThemeProvider, useColorScheme } from "@/theme";
+import { useSetupStatus } from "@/setup/setup-status";
+import { navigationTheme, ThemeProvider, useColorScheme, useThemeColors } from "@/theme";
 
 // Hold the splash until the type ramp is real. Showing Inter's metrics with the
 // system face substituted, then swapping, is worse than a beat of splash.
@@ -55,16 +57,26 @@ export default function RootLayout() {
 
 function ThemedNavigation() {
   const scheme = useColorScheme();
+  const colors = useThemeColors();
   const session = useSessionState();
   const seenOnboarding = useHasSeenOnboarding();
+  const setup = useSetupStatus();
   const hydrated = session.status !== "hydrating";
   const signedIn = session.status === "signedIn";
+  const ready = hydrated && !(signedIn && setup === "unknown");
+  const inSetup = signedIn && setup === "pending";
 
   useEffect(() => {
-    if (hydrated) SplashScreen.hideAsync().catch(() => {});
-  }, [hydrated]);
+    if (ready) SplashScreen.hideAsync().catch(() => {});
+  }, [ready]);
 
-  if (!hydrated) return null;
+  if (!ready) {
+    return (
+      <View style={[styles.pending, { backgroundColor: colors.backgroundCanvas }]}>
+        {hydrated && <ActivityIndicator color={colors.accent} />}
+      </View>
+    );
+  }
 
   return (
     <NavigationThemeProvider value={navigationTheme(scheme)}>
@@ -75,7 +87,10 @@ function ThemedNavigation() {
         <Stack.Protected guard={!signedIn}>
           <Stack.Screen name="(auth)" />
         </Stack.Protected>
-        <Stack.Protected guard={signedIn}>
+        <Stack.Protected guard={inSetup}>
+          <Stack.Screen name="(setup)" />
+        </Stack.Protected>
+        <Stack.Protected guard={signedIn && !inSetup}>
           <Stack.Screen name="(app)" />
         </Stack.Protected>
         <Stack.Screen name="design-system" />
@@ -84,3 +99,11 @@ function ThemedNavigation() {
     </NavigationThemeProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  pending: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});
