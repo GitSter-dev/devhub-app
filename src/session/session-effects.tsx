@@ -3,6 +3,7 @@ import { AppState } from "react-native";
 
 import { queryClient } from "@/api/query-client";
 import { followSync } from "@/features/follows/follow-sync";
+import { likeSync } from "@/features/posts/like-sync";
 
 import { sessionManager } from "./session-manager";
 import { useSessionState } from "./use-session";
@@ -27,6 +28,7 @@ export function SessionEffects() {
     if (status === "signedOut" || status === "reauthRequired") {
       queryClient.clear();
       followSync.reset();
+      likeSync.reset();
     }
   }, [status]);
 

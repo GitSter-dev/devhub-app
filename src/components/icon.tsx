@@ -28,6 +28,8 @@ const symbols = {
   person: { ios: "person.crop.circle", android: "account_circle" },
   link: { ios: "link", android: "link" },
   edit: { ios: "pencil", android: "edit" },
+  more: { ios: "ellipsis", android: "more_horiz" },
+  compose: { ios: "square.and.pencil", android: "edit_square" },
 } as const satisfies Record<string, Extract<SymbolViewProps["name"], object>>;
 
 export type IconName = keyof typeof symbols;
