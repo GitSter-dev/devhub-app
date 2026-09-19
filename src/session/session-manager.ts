@@ -4,6 +4,7 @@ import { createAuthedClient, type AccessTokenSource } from "@/api/http-client";
 import { newIdempotencyKey } from "@/api/idempotency";
 import { createStore } from "@/state/create-store";
 
+import { sessionMarker } from "./session-marker";
 import { tokenStore } from "./token-store";
 
 export type ReauthReason = "expired" | "replaced";
@@ -25,13 +26,30 @@ class SessionManager implements AccessTokenSource {
   private accessTokenExpiresAt = 0;
   private refreshToken: string | null = null;
   private inflightRefresh: Promise<string | null> | null = null;
+  private hydration: Promise<void> | null = null;
 
-  async hydrate(): Promise<void> {
-    this.refreshToken = await tokenStore.read();
-    if (!this.refreshToken) {
-      this.store.set({ status: "signedOut" });
+  hydrate(): Promise<void> {
+    this.hydration ??= this.restore();
+    return this.hydration;
+  }
+
+  private async restore(): Promise<void> {
+    const stored = await tokenStore.read();
+    if (stored.kind === "error") {
+      console.warn("[session] refresh token unreadable at startup", stored.error);
+      this.store.set({ status: "reauthRequired", reason: "expired", message: null });
       return;
     }
+    if (stored.kind === "missing") {
+      if (sessionMarker.isPresent()) {
+        console.warn("[session] refresh token missing while a session was expected");
+        await this.endSession("expired", null, "token missing at startup");
+      } else {
+        this.store.set({ status: "signedOut" });
+      }
+      return;
+    }
+    this.refreshToken = stored.token;
     const restored = this.refreshedAccessToken().then(() => true);
     const settled = await Promise.race([restored, delay(COLD_START_WAIT_MS).then(() => false)]);
     if (!settled && this.store.get().status === "hydrating") {
@@ -44,9 +62,9 @@ class SessionManager implements AccessTokenSource {
     this.store.set({ status: "signedIn", online: true });
   }
 
-  async signOut(): Promise<void> {
+  async signOut(reason = "signed out"): Promise<void> {
     const refreshToken = this.refreshToken;
-    await this.clearTokens();
+    await this.clearTokens(reason);
     this.store.set({ status: "signedOut" });
     if (refreshToken) {
       authApi.logout(refreshToken, newIdempotencyKey()).catch(() => undefined);
@@ -55,7 +73,7 @@ class SessionManager implements AccessTokenSource {
 
   async endSessionFromServer(reason: ReauthReason): Promise<void> {
     if (this.store.get().status !== "signedIn") return;
-    await this.endSession(reason, null);
+    await this.endSession(reason, null, `server closed the session (${reason})`);
   }
 
   dismissReauth(): void {
@@ -104,9 +122,9 @@ class SessionManager implements AccessTokenSource {
       return this.accessToken;
     } catch (error) {
       if (isApiError(error) && error.code === "SESSION_REPLACED") {
-        await this.endSession("replaced", error.message);
+        await this.endSession("replaced", error.message, "refresh: session replaced");
       } else if (isApiError(error) && (error.code === "INVALID_REFRESH_TOKEN" || error.status === 401)) {
-        await this.endSession("expired", null);
+        await this.endSession("expired", null, `refresh rejected (${error.code})`);
       } else {
         this.store.set({ status: "signedIn", online: false });
       }
@@ -114,8 +132,8 @@ class SessionManager implements AccessTokenSource {
     }
   }
 
-  private async endSession(reason: ReauthReason, message: string | null): Promise<void> {
-    await this.clearTokens();
+  private async endSession(reason: ReauthReason, message: string | null, cause: string): Promise<void> {
+    await this.clearTokens(cause);
     this.store.set({ status: "reauthRequired", reason, message });
   }
 
@@ -124,12 +142,15 @@ class SessionManager implements AccessTokenSource {
     this.accessTokenExpiresAt = Date.parse(pair.accessTokenExpiresAt);
     this.refreshToken = pair.refreshToken;
     await tokenStore.write(pair.refreshToken);
+    sessionMarker.set();
   }
 
-  private async clearTokens(): Promise<void> {
+  private async clearTokens(cause: string): Promise<void> {
+    console.info(`[session] cleared: ${cause}`);
     this.accessToken = null;
     this.accessTokenExpiresAt = 0;
     this.refreshToken = null;
+    sessionMarker.clear();
     await tokenStore.clear();
   }
 }

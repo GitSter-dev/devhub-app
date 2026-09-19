@@ -29,7 +29,7 @@ export function useCurrentUser() {
   useEffect(() => {
     if (isApiError(query.error) && query.error.code === "NOT_FOUND") {
       lastUserStore.clear();
-      void sessionManager.signOut();
+      void sessionManager.signOut("account no longer exists");
     }
   }, [query.error]);
 
