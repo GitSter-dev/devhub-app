@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { router } from "expo-router";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 import { toApiError } from "@/api/api-error";
@@ -82,6 +83,9 @@ export default function PeopleScreen() {
                 haptics.selection();
                 followSync.toggle(suggestion.user.id);
               }}
+              onOpen={() =>
+                router.push({ pathname: "/person/[username]", params: { username: suggestion.user.username } })
+              }
             />
           ))}
         </View>

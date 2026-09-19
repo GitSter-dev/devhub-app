@@ -11,6 +11,7 @@ export default function SetupLayout() {
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.backgroundCanvas } }}>
       <Stack.Screen name="stack" />
       <Stack.Screen name="people" />
+      <Stack.Screen name="person/[username]" />
     </Stack>
   );
 }

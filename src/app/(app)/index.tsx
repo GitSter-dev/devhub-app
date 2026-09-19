@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -46,15 +47,42 @@ export default function HomeScreen() {
       <View style={styles.column}>
         <View style={styles.header}>
           <Wordmark />
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Sign out"
-            hitSlop={hitSlop}
-            onPress={() => void sessionManager.signOut()}
-            style={[styles.iconButton, { borderColor: colors.border, backgroundColor: colors.backgroundSurface }]}
-          >
-            <Icon name="logout" color={colors.textSecondary} />
-          </Pressable>
+          <View style={styles.actions}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Find developers"
+              hitSlop={hitSlop}
+              onPress={() => router.push("/search")}
+              style={[styles.iconButton, { borderColor: colors.border, backgroundColor: colors.backgroundSurface }]}
+            >
+              <Icon name="search" color={colors.textSecondary} />
+            </Pressable>
+            {user && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Your profile"
+                hitSlop={hitSlop}
+                onPress={() => router.push({ pathname: "/u/[username]", params: { username: user.username } })}
+                style={[
+                  styles.iconButton,
+                  { borderColor: colors.borderAccentSubtle, backgroundColor: colors.backgroundAccentSubtle },
+                ]}
+              >
+                <AppText variant="headline" tone="accent">
+                  {user.displayName.charAt(0).toUpperCase()}
+                </AppText>
+              </Pressable>
+            )}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Sign out"
+              hitSlop={hitSlop}
+              onPress={() => void sessionManager.signOut()}
+              style={[styles.iconButton, { borderColor: colors.border, backgroundColor: colors.backgroundSurface }]}
+            >
+              <Icon name="logout" color={colors.textSecondary} />
+            </Pressable>
+          </View>
         </View>
 
         {offline && (
@@ -104,6 +132,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+  },
+  actions: {
+    flexDirection: "row",
+    gap: spacing.sm,
   },
   iconButton: {
     width: minTouchTarget,
