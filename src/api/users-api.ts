@@ -10,6 +10,7 @@ export type CurrentUser = {
   role: string;
   emailVerified: boolean;
   setupCompleted: boolean;
+  usernameChangeAvailableAt: string | null;
   createdAt: string;
 };
 
