@@ -7,6 +7,7 @@ import { Inter_600SemiBold } from "@expo-google-fonts/inter/600SemiBold";
 import { Inter_700Bold } from "@expo-google-fonts/inter/700Bold";
 import { JetBrainsMono_400Regular } from "@expo-google-fonts/jetbrains-mono/400Regular";
 import { JetBrainsMono_500Medium } from "@expo-google-fonts/jetbrains-mono/500Medium";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import { Stack, ThemeProvider as NavigationThemeProvider } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -15,6 +16,10 @@ import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { queryClient } from "@/api/query-client";
+import { useHasSeenOnboarding } from "@/onboarding/onboarding-store";
+import { SessionEffects } from "@/session/session-effects";
+import { useSessionState } from "@/session/use-session";
 import { navigationTheme, ThemeProvider, useColorScheme } from "@/theme";
 
 // Hold the splash until the type ramp is real. Showing Inter's metrics with the
@@ -32,39 +37,49 @@ export default function RootLayout() {
     JetBrainsMono_400Regular,
     JetBrainsMono_500Medium,
   });
-
-  useEffect(() => {
-    // Hide on error too, rather than stranding the user on the splash screen —
-    // the app still works with the fallback face.
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync().catch(() => {});
-    }
-  }, [fontsLoaded, fontError]);
-
-  if (!fontsLoaded && !fontError) return null;
+  const fontsReady = fontsLoaded || Boolean(fontError);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <ThemeProvider>
-          <ThemedNavigation />
-        </ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider>
+            <SessionEffects />
+            {fontsReady && <ThemedNavigation />}
+          </ThemeProvider>
+        </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
 
-/**
- * Split out because it reads the theme, which only exists below <ThemeProvider>.
- * The preference is read synchronously at provider init, so there's no second
- * gate here — the first frame is already in the right scheme.
- */
 function ThemedNavigation() {
   const scheme = useColorScheme();
+  const session = useSessionState();
+  const seenOnboarding = useHasSeenOnboarding();
+  const hydrated = session.status !== "hydrating";
+  const signedIn = session.status === "signedIn";
+
+  useEffect(() => {
+    if (hydrated) SplashScreen.hideAsync().catch(() => {});
+  }, [hydrated]);
+
+  if (!hydrated) return null;
 
   return (
     <NavigationThemeProvider value={navigationTheme(scheme)}>
-      <Stack screenOptions={{ headerShown: false }} />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Protected guard={!signedIn && !seenOnboarding}>
+          <Stack.Screen name="(onboarding)" />
+        </Stack.Protected>
+        <Stack.Protected guard={!signedIn}>
+          <Stack.Screen name="(auth)" />
+        </Stack.Protected>
+        <Stack.Protected guard={signedIn}>
+          <Stack.Screen name="(app)" />
+        </Stack.Protected>
+        <Stack.Screen name="design-system" />
+      </Stack>
       <StatusBar style={scheme === "dark" ? "light" : "dark"} />
     </NavigationThemeProvider>
   );
