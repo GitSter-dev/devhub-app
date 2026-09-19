@@ -2,7 +2,7 @@ import { readValue, removeValue, writeValue } from "@/storage/key-value";
 
 const LAST_USER_KEY = "devhub.session.lastUser";
 
-export type LastUser = { username: string; displayName: string };
+export type LastUser = { id?: string; username: string; displayName: string };
 
 function isLastUser(value: unknown): value is LastUser {
   return (
@@ -23,7 +23,7 @@ export const lastUserStore = {
     }
   },
   write(user: LastUser): void {
-    writeValue(LAST_USER_KEY, JSON.stringify({ username: user.username, displayName: user.displayName }));
+    writeValue(LAST_USER_KEY, JSON.stringify({ id: user.id, username: user.username, displayName: user.displayName }));
   },
   clear(): void {
     removeValue(LAST_USER_KEY);

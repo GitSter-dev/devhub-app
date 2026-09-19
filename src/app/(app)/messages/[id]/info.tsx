@@ -13,15 +13,15 @@ import { TextField } from "@/components/text-field";
 import { useConversation } from "@/chat/chat-queries";
 import { chatStore } from "@/chat/chat-store";
 import { chatSync } from "@/chat/chat-sync";
+import { useCurrentUserId } from "@/chat/current-user-id";
 import { sessionManager } from "@/session/session-manager";
-import { useCurrentUser } from "@/session/use-session";
 import { avatarSize, componentRadius, hitSlop, layoutSpacing, maxContentWidth, minTouchTarget, spacing, useThemeColors } from "@/theme";
 
 export default function GroupInfoScreen() {
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const myId = useCurrentUser().data?.id ?? null;
+  const myId = useCurrentUserId();
   const conversation = useConversation(id).data ?? null;
   const [title, setTitle] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);

@@ -15,7 +15,7 @@ export function CodeBlock({ code, language }: { code: string; language: string |
           </AppText>
         </View>
       )}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scroller} contentContainerStyle={styles.scroll}>
         <AppText variant="code" selectable>
           {code}
         </AppText>
@@ -34,6 +34,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  scroller: {
+    flexGrow: 0,
   },
   scroll: {
     padding: spacing.md,

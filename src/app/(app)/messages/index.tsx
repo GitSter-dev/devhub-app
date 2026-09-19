@@ -8,8 +8,8 @@ import { Icon } from "@/components/icon";
 import { ScreenHeader } from "@/components/screen-header";
 import { useInbox, useRequests } from "@/chat/chat-queries";
 import { chatSync } from "@/chat/chat-sync";
+import { useCurrentUserId } from "@/chat/current-user-id";
 import { ConversationRow } from "@/features/chat/conversation-row";
-import { useCurrentUser } from "@/session/use-session";
 import { componentRadius, hitSlop, layoutSpacing, maxContentWidth, minTouchTarget, spacing, useThemeColors } from "@/theme";
 
 type Segment = "chats" | "requests";
@@ -17,7 +17,7 @@ type Segment = "chats" | "requests";
 export default function MessagesScreen() {
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
-  const myId = useCurrentUser().data?.id ?? null;
+  const myId = useCurrentUserId();
   const inbox = useInbox().data ?? [];
   const requests = useRequests().data ?? [];
   const [segment, setSegment] = useState<Segment>("chats");

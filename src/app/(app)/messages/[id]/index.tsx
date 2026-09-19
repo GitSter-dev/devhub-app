@@ -10,6 +10,7 @@ import { Icon } from "@/components/icon";
 import { useChatMessages, useConversation } from "@/chat/chat-queries";
 import { chatStore, type OutgoingRow } from "@/chat/chat-store";
 import { chatSync } from "@/chat/chat-sync";
+import { useCurrentUserId } from "@/chat/current-user-id";
 import { withoutMessageContent } from "@/chat/conversation-state";
 import { openConversation } from "@/chat/open-conversation";
 import { outgoingQueue } from "@/chat/outgoing-queue";
@@ -21,7 +22,6 @@ import { SystemLine } from "@/features/chat/system-line";
 import { TypingRow } from "@/features/chat/typing-row";
 import { realtimeConnection } from "@/realtime/realtime-connection";
 import { sessionManager } from "@/session/session-manager";
-import { useCurrentUser } from "@/session/use-session";
 import { useStore } from "@/state/create-store";
 import { hitSlop, layoutSpacing, minTouchTarget, spacing, useThemeColors } from "@/theme";
 
@@ -58,7 +58,7 @@ export default function ChatScreen() {
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const myId = useCurrentUser().data?.id ?? null;
+  const myId = useCurrentUserId();
   const conversation = useConversation(id).data ?? null;
   const { data } = useChatMessages(id);
   const connection = useStore(realtimeConnection.store);
