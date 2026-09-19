@@ -91,11 +91,11 @@ export function MessageBubble({
         ) : (
           <>
             {content.body && (
-              <AppText variant="callout" selectable>
+              <AppText variant="callout">
                 {content.body}
               </AppText>
             )}
-            {content.code && <CodeBlock code={content.code} language={content.codeLanguage} />}
+            {content.code && <CodeBlock code={content.code} language={content.codeLanguage} selectable={false} />}
           </>
         )}
         <View style={styles.meta}>

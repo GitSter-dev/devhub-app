@@ -1,9 +1,11 @@
+import * as Clipboard from "expo-clipboard";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, AppState, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { chatApi, type ChatMessage } from "@/api/chat-api";
+import { ActionSheet, type SheetAction } from "@/components/action-sheet";
 import { AppText } from "@/components/app-text";
 import { Button } from "@/components/button";
 import { Icon } from "@/components/icon";
@@ -36,6 +38,10 @@ function dayOf(iso: string): string {
   return new Date(iso).toDateString();
 }
 
+function copyableText(message: ChatMessage): string {
+  return [message.body, message.code].filter(Boolean).join("\n\n");
+}
+
 function buildItems(messages: ChatMessage[], outgoing: OutgoingRow[]): Item[] {
   const ordered: (Item & { at: string })[] = [
     ...messages.map((message) => ({ kind: "message" as const, key: message.id, message, at: message.createdAt })),
@@ -63,6 +69,7 @@ export default function ChatScreen() {
   const { data } = useChatMessages(id);
   const connection = useStore(realtimeConnection.store);
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
+  const [menu, setMenu] = useState<SheetAction[] | null>(null);
   const list = useRef<FlatList<Item>>(null);
 
   const messages = useMemo(() => data?.messages ?? [], [data]);
@@ -109,24 +116,22 @@ export default function ChatScreen() {
         text: "Delete",
         style: "destructive",
         onPress: () => {
-          void chatApi
-            .deleteMessage(sessionManager.client, id, message.id)
-            .then(() => chatStore.updateMessages(id, (candidate) => withoutMessageContent(candidate, message.id)))
-            .catch(() => Alert.alert("Couldn't delete the message", "Check your connection and try again."));
+          void chatApi.deleteMessage(sessionManager.client, id, message.id).then(
+            () => chatStore.updateMessages(id, (candidate) => withoutMessageContent(candidate, message.id)),
+            () => Alert.alert("Couldn't delete the message", "Check your connection and try again."),
+          );
         },
       },
     ]);
 
-  const messageMenu = (message: ChatMessage, mine: boolean) =>
-    Alert.alert(
-      "Message",
-      undefined,
-      [
-        { text: "Reply", onPress: () => setReplyTo(message) },
-        ...(mine ? [{ text: "Delete for everyone", style: "destructive" as const, onPress: () => deleteMessage(message) }] : []),
-        { text: "Cancel", style: "cancel" as const },
-      ],
-    );
+  const messageActions = (message: ChatMessage, mine: boolean): SheetAction[] => {
+    const text = copyableText(message);
+    return [
+      { label: "Reply", onPress: () => setReplyTo(message) },
+      ...(text ? [{ label: "Copy", onPress: () => void Clipboard.setStringAsync(text) }] : []),
+      ...(mine ? [{ label: "Delete for everyone", destructive: true, onPress: () => deleteMessage(message) }] : []),
+    ];
+  };
 
   const failedMenu = (row: OutgoingRow) =>
     Alert.alert("Message not sent", row.error ?? undefined, [
@@ -169,7 +174,7 @@ export default function ChatScreen() {
         senderName={isGroup && !mine && startsRun ? (message.sender?.displayName ?? null) : null}
         tick={mine ? tickFor(message, conversation) : null}
         onReply={pending ? undefined : () => setReplyTo(message)}
-        onLongPress={pending ? undefined : () => messageMenu(message, mine)}
+        onLongPress={pending ? undefined : () => setMenu(messageActions(message, mine))}
         onPressQuote={message.replyTo ? () => jumpTo(message.replyTo!.id) : undefined}
       />
     );
@@ -256,6 +261,7 @@ export default function ChatScreen() {
           }}
         />
       )}
+      <ActionSheet visible={menu !== null} actions={menu ?? []} onClose={() => setMenu(null)} />
     </KeyboardAvoidingView>
   );
 }

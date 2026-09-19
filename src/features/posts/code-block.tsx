@@ -3,7 +3,13 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { AppText } from "@/components/app-text";
 import { componentRadius, continuous, spacing, useThemeColors } from "@/theme";
 
-export function CodeBlock({ code, language }: { code: string; language: string | null }) {
+type CodeBlockProps = {
+  code: string;
+  language: string | null;
+  selectable?: boolean;
+};
+
+export function CodeBlock({ code, language, selectable = true }: CodeBlockProps) {
   const colors = useThemeColors();
 
   return (
@@ -16,7 +22,7 @@ export function CodeBlock({ code, language }: { code: string; language: string |
         </View>
       )}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scroller} contentContainerStyle={styles.scroll}>
-        <AppText variant="code" selectable>
+        <AppText variant="code" selectable={selectable}>
           {code}
         </AppText>
       </ScrollView>
