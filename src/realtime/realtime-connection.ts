@@ -5,6 +5,7 @@ import { sessionManager } from "@/session/session-manager";
 import { createStore } from "@/state/create-store";
 
 import { reconnectDelay } from "./reconnect-backoff";
+import { realtimeEvents, type RealtimeEvent } from "./realtime-events";
 
 export type RealtimeState =
   | { status: "idle" }
@@ -18,6 +19,7 @@ const HEARTBEAT_MS = 10_000;
 const CONNECTION_TIMEOUT_MS = 10_000;
 const CLOSE_SESSION_REPLACED = 4001;
 const CLOSE_SESSION_ENDED = 4002;
+const EVENTS_DESTINATION = "/user/queue/events";
 
 class RealtimeConnection {
   readonly store = createStore<RealtimeState>({ status: "idle" });
@@ -59,6 +61,10 @@ class RealtimeConnection {
     void this.connect(this.generation);
   }
 
+  publish(destination: string): void {
+    if (this.client?.connected) this.client.publish({ destination, body: "" });
+  }
+
   private async connect(generation: number): Promise<void> {
     this.store.set({ status: "connecting", attempt: this.attempt });
     const token = await sessionManager.currentAccessToken();
@@ -83,7 +89,15 @@ class RealtimeConnection {
     client.onConnect = () => {
       if (generation !== this.generation) return;
       this.attempt = 0;
+      client.subscribe(EVENTS_DESTINATION, (frame) => {
+        try {
+          realtimeEvents.emit(JSON.parse(frame.body) as RealtimeEvent);
+        } catch {
+          return;
+        }
+      });
       this.store.set({ status: "connected" });
+      realtimeEvents.emitResync();
     };
     client.onStompError = (frame) => {
       rejection = frame.headers.message;

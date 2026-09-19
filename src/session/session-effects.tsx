@@ -2,6 +2,10 @@ import { useEffect } from "react";
 import { AppState } from "react-native";
 
 import { queryClient } from "@/api/query-client";
+import { chatStore } from "@/chat/chat-store";
+import { outgoingQueue } from "@/chat/outgoing-queue";
+import { receiptSync } from "@/chat/receipt-sync";
+import { typing } from "@/chat/typing";
 import { followSync } from "@/features/follows/follow-sync";
 import { likeSync } from "@/features/posts/like-sync";
 
@@ -29,6 +33,10 @@ export function SessionEffects() {
       queryClient.clear();
       followSync.reset();
       likeSync.reset();
+      receiptSync.reset();
+      outgoingQueue.reset();
+      typing.reset();
+      void chatStore.wipe();
     }
   }, [status]);
 
