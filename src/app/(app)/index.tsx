@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { fetchFeed } from "@/api/posts-api";
+import { useUnreadTotal } from "@/chat/chat-queries";
 import { AppText } from "@/components/app-text";
 import { Button } from "@/components/button";
 import { FormBanner } from "@/components/form-banner";
@@ -24,6 +25,7 @@ export default function HomeScreen() {
   const user = useCurrentUser().data;
   const push = usePushState();
   const offline = session.status === "signedIn" && !session.online;
+  const unread = useUnreadTotal();
 
   return (
     <View style={styles.screen}>
@@ -36,6 +38,22 @@ export default function HomeScreen() {
             <View style={styles.bar}>
               <Wordmark />
               <View style={styles.actions}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={unread > 0 ? `Messages, ${unread} unread` : "Messages"}
+                  hitSlop={hitSlop}
+                  onPress={() => router.push("/messages")}
+                  style={[styles.iconButton, { borderColor: colors.border, backgroundColor: colors.backgroundSurface }]}
+                >
+                  <Icon name="chat" color={colors.textSecondary} />
+                  {unread > 0 && (
+                    <View style={[styles.badge, { backgroundColor: colors.accentSolid, borderColor: colors.backgroundCanvas }]}>
+                      <AppText variant="caption" style={{ color: colors.onAccentSolid }}>
+                        {unread > 99 ? "99+" : unread}
+                      </AppText>
+                    </View>
+                  )}
+                </Pressable>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Find developers"
@@ -140,6 +158,18 @@ const styles = StyleSheet.create({
   empty: {
     gap: spacing.md,
     paddingTop: spacing.xl,
+  },
+  badge: {
+    position: "absolute",
+    top: -spacing.xxs,
+    right: -spacing.xxs,
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    paddingHorizontal: spacing.xxs,
+    alignItems: "center",
+    justifyContent: "center",
   },
   fab: {
     position: "absolute",

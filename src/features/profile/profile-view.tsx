@@ -37,10 +37,11 @@ type ProfileViewProps = {
   onOpenList?: (list: FollowList) => void;
   onEditProfile?: () => void;
   onEditStack?: () => void;
+  onMessage?: (userId: string) => void;
   showPosts?: boolean;
 };
 
-export function ProfileView({ username, onOpenList, onEditProfile, onEditStack, showPosts = false }: ProfileViewProps) {
+export function ProfileView({ username, onOpenList, onEditProfile, onEditStack, onMessage, showPosts = false }: ProfileViewProps) {
   const profile = useProfile(username);
 
   return (
@@ -59,6 +60,7 @@ export function ProfileView({ username, onOpenList, onEditProfile, onEditStack, 
               onOpenList={onOpenList}
               onEditProfile={onEditProfile}
               onEditStack={onEditStack}
+              onMessage={onMessage}
               showPosts={showPosts}
             />
           ) : profile.error ? (
@@ -89,7 +91,7 @@ function ProfileSkeleton() {
 
 type ProfileBodyProps = Omit<ProfileViewProps, "username"> & { profile: Profile };
 
-function ProfileBody({ profile, onOpenList, onEditProfile, onEditStack, showPosts }: ProfileBodyProps) {
+function ProfileBody({ profile, onOpenList, onEditProfile, onEditStack, onMessage, showPosts }: ProfileBodyProps) {
   const { colors, shadows } = useTheme();
   const following = useFollowing().get(profile.id) ?? profile.following;
   const followerCount = profile.followerCount + (following ? 1 : 0) - (profile.following ? 1 : 0);
@@ -166,6 +168,9 @@ function ProfileBody({ profile, onOpenList, onEditProfile, onEditStack, showPost
                 followSync.toggle(profile.id);
               }}
             />
+            {onMessage && (
+              <Button label="Message" variant="secondary" icon="chat" onPress={() => onMessage(profile.id)} />
+            )}
           </View>
         )}
       </View>
@@ -298,6 +303,7 @@ const styles = StyleSheet.create({
   },
   actions: {
     alignSelf: "stretch",
+    gap: spacing.sm,
   },
   section: {
     gap: spacing.md,

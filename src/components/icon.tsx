@@ -30,6 +30,14 @@ const symbols = {
   edit: { ios: "pencil", android: "edit" },
   more: { ios: "ellipsis", android: "more_horiz" },
   compose: { ios: "square.and.pencil", android: "edit_square" },
+  chat: { ios: "bubble.left.and.bubble.right", android: "chat" },
+  pending: { ios: "clock", android: "schedule" },
+  sent: { ios: "checkmark", android: "check" },
+  delivered: { ios: "checkmark.circle", android: "done_all" },
+  group: { ios: "person.2.fill", android: "group" },
+  add: { ios: "plus", android: "add" },
+  send: { ios: "paperplane.fill", android: "send" },
+  close: { ios: "xmark", android: "close" },
 } as const satisfies Record<string, Extract<SymbolViewProps["name"], object>>;
 
 export type IconName = keyof typeof symbols;
