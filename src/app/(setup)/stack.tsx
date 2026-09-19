@@ -8,14 +8,12 @@ import { saveMyTopics } from "@/api/topics-api";
 import { AppText } from "@/components/app-text";
 import { Button } from "@/components/button";
 import { FormBanner } from "@/components/form-banner";
-import { TopicChip } from "@/components/topic-chip";
 import { haptics } from "@/feedback/haptics";
 import { SetupScaffold } from "@/features/setup/setup-scaffold";
 import { setupQueryKeys, useMyTopics, useTopics } from "@/features/setup/use-setup-queries";
+import { MAX_TOPICS, TopicPicker } from "@/features/topics/topic-picker";
 import { sessionManager } from "@/session/session-manager";
 import { spacing, useThemeColors } from "@/theme";
-
-const MAX_TOPICS = 10;
 
 export default function StackScreen() {
   const colors = useThemeColors();
@@ -36,14 +34,6 @@ export default function StackScreen() {
     },
     onError: () => haptics.error(),
   });
-
-  const toggle = (slug: string) => {
-    haptics.selection();
-    const next = new Set(selected);
-    if (next.has(slug)) next.delete(slug);
-    else next.add(slug);
-    setPicked(next);
-  };
 
   const full = selected.size >= MAX_TOPICS;
   const loadError = topics.error ?? myTopics.error;
@@ -84,28 +74,13 @@ export default function StackScreen() {
       ) : !topics.data || myTopics.isPending ? (
         <ActivityIndicator style={styles.loading} color={colors.accent} />
       ) : (
-        <View style={styles.chips}>
-          {topics.data.map((topic) => (
-            <TopicChip
-              key={topic.slug}
-              slug={topic.slug}
-              selected={selected.has(topic.slug)}
-              disabled={full && !selected.has(topic.slug)}
-              onPress={() => toggle(topic.slug)}
-            />
-          ))}
-        </View>
+        <TopicPicker topics={topics.data} selected={selected} onChange={setPicked} />
       )}
     </SetupScaffold>
   );
 }
 
 const styles = StyleSheet.create({
-  chips: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
   footer: {
     gap: spacing.md,
   },

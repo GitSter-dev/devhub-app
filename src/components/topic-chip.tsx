@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { topicColor } from "@/features/topics/topic-color";
 import { componentRadius, minTouchTarget, opacity, spacing, useThemeColors } from "@/theme";
@@ -9,13 +9,23 @@ import { PressableScale } from "./pressable-scale";
 type TopicChipProps = {
   slug: string;
   selected: boolean;
-  onPress: () => void;
+  onPress?: () => void;
   disabled?: boolean;
 };
 
 export function TopicChip({ slug, selected, onPress, disabled = false }: TopicChipProps) {
   const colors = useThemeColors();
   const swatch = colors.topic[topicColor(slug)];
+
+  if (!onPress) {
+    return (
+      <View style={[styles.chip, { backgroundColor: swatch.bg, borderColor: swatch.fg }]}>
+        <AppText variant="subhead" style={{ color: swatch.fg }}>
+          #{slug}
+        </AppText>
+      </View>
+    );
+  }
 
   return (
     <PressableScale

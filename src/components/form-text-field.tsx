@@ -2,15 +2,19 @@ import { Controller, type Control, type FieldValues, type Path } from "react-hoo
 
 import { TextField } from "./text-field";
 
-type FormTextFieldProps<T extends FieldValues> = Omit<
+type FormTextFieldProps<T extends FieldValues, TOutput extends FieldValues> = Omit<
   React.ComponentProps<typeof TextField>,
   "value" | "onChangeText" | "onBlur" | "error" | "ref"
 > & {
-  control: Control<T>;
+  control: Control<T, unknown, TOutput>;
   name: Path<T>;
 };
 
-export function FormTextField<T extends FieldValues>({ control, name, ...field }: FormTextFieldProps<T>) {
+export function FormTextField<T extends FieldValues, TOutput extends FieldValues = T>({
+  control,
+  name,
+  ...field
+}: FormTextFieldProps<T, TOutput>) {
   return (
     <Controller
       control={control}

@@ -24,6 +24,10 @@ const symbols = {
   spark: { ios: "sparkles", android: "auto_awesome" },
   bell: { ios: "bell.badge.fill", android: "notifications_active" },
   bellOff: { ios: "bell.slash.fill", android: "notifications_off" },
+  search: { ios: "magnifyingglass", android: "search" },
+  person: { ios: "person.crop.circle", android: "account_circle" },
+  link: { ios: "link", android: "link" },
+  edit: { ios: "pencil", android: "edit" },
 } as const satisfies Record<string, Extract<SymbolViewProps["name"], object>>;
 
 export type IconName = keyof typeof symbols;

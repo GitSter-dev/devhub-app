@@ -38,6 +38,15 @@ class FollowSync {
     this.schedule(userId, entry, SETTLE_MS);
   }
 
+  seed(userId: string, following: boolean): void {
+    const entry = this.entryFor(userId);
+    if (entry.timer || entry.inFlight || entry.desired !== entry.confirmed) return;
+    if (entry.confirmed === following) return;
+    entry.confirmed = following;
+    entry.desired = following;
+    this.publish();
+  }
+
   reset(): void {
     this.entries.forEach((entry) => {
       if (entry.timer) clearTimeout(entry.timer);
