@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { AppText } from "@/components/app-text";
@@ -13,13 +14,22 @@ export type PersonIdentity = {
 type PersonRowProps = {
   person: PersonIdentity;
   subtitle?: string;
-  following: boolean;
-  onToggleFollow: () => void;
-  onOpen: () => void;
+  following?: boolean;
+  onToggleFollow?: () => void;
+  onOpen?: () => void;
   canFollow?: boolean;
+  trailing?: ReactNode;
 };
 
-export function PersonRow({ person, subtitle, following, onToggleFollow, onOpen, canFollow = true }: PersonRowProps) {
+export function PersonRow({
+  person,
+  subtitle,
+  following = false,
+  onToggleFollow,
+  onOpen,
+  canFollow = true,
+  trailing,
+}: PersonRowProps) {
   const { colors } = useTheme();
 
   return (
@@ -49,7 +59,9 @@ export function PersonRow({ person, subtitle, following, onToggleFollow, onOpen,
           </AppText>
         )}
       </View>
-      {canFollow && <FollowButton following={following} name={person.displayName} onPress={onToggleFollow} />}
+      {trailing ?? (canFollow && onToggleFollow && (
+        <FollowButton following={following} name={person.displayName} onPress={onToggleFollow} />
+      ))}
     </PressableScale>
   );
 }

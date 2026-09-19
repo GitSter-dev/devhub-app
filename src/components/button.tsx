@@ -6,7 +6,7 @@ import { AppText } from "./app-text";
 import { Icon, type IconName } from "./icon";
 import { PressableScale } from "./pressable-scale";
 
-type ButtonVariant = "primary" | "secondary" | "ghost";
+type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 
 type ButtonProps = {
   label: string;
@@ -26,6 +26,7 @@ export function Button({ label, onPress, variant = "primary", loading = false, d
     primary: { background: colors.accentSolid, border: colors.accentSolid, label: colors.onAccentSolid, shadow: shadows.accent },
     secondary: { background: colors.backgroundSurface, border: colors.borderStrong, label: colors.textPrimary, shadow: shadows.none },
     ghost: { background: "transparent", border: "transparent", label: colors.accent, shadow: shadows.none },
+    danger: { background: colors.dangerSolid, border: colors.dangerSolid, label: colors.onAccentSolid, shadow: shadows.none },
   }[variant];
 
   return (

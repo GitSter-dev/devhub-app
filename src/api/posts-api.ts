@@ -19,6 +19,8 @@ export type Post = {
   liked: boolean;
   mine: boolean;
   deleted: boolean;
+  removed: boolean;
+  underReview: boolean;
 };
 
 export type PostPage = {

@@ -3,16 +3,41 @@ import { useEffect } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import type { Post } from "@/api/posts-api";
+import type { SheetAction } from "@/components/action-sheet";
+import { actionSheet } from "@/components/action-sheet-host";
 import { AppText } from "@/components/app-text";
 import { Icon } from "@/components/icon";
 import { PressableScale } from "@/components/pressable-scale";
+import { confirmBlock } from "@/moderation/block-actions";
+import { reportFlow } from "@/moderation/report-store";
 import { avatarSize, componentRadius, continuous, hitSlop, layoutSpacing, spacing, useTheme } from "@/theme";
 
 import { CodeBlock } from "./code-block";
 import { LikeControl } from "./like-control";
 import { likeSync, useLikes } from "./like-sync";
 import { relativeTime } from "./relative-time";
+
 import { useDeletePost } from "./use-delete-post";
+
+function postActions(post: Post, confirmDelete: (postId: string) => void): SheetAction[] {
+  if (post.mine) {
+    return [{ label: "Delete post", destructive: true, onPress: () => confirmDelete(post.id) }];
+  }
+  return [
+    {
+      label: "Report post",
+      destructive: true,
+      onPress: () =>
+        reportFlow.open({ type: "POST", id: post.id, username: post.author.username, userId: post.author.id }),
+    },
+    {
+      label: `Block @${post.author.username}`,
+      destructive: true,
+      onPress: () => confirmBlock(post.author.id, post.author.username),
+    },
+  ];
+}
+
 
 type PostCardProps = {
   post: Post;
@@ -82,21 +107,26 @@ export function PostCard({ post, focused = false, onOpen }: PostCardProps) {
             </AppText>
           </View>
         </Pressable>
-        {post.mine && (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Post options"
-            hitSlop={hitSlop}
-            onPress={() => confirmDelete(post.id)}
-          >
-            <Icon name="more" color={colors.textTertiary} size="sm" />
-          </Pressable>
-        )}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Post options"
+          hitSlop={hitSlop}
+          onPress={() => actionSheet.open(postActions(post, confirmDelete))}
+        >
+          <Icon name="more" color={colors.textTertiary} size="sm" />
+        </Pressable>
       </View>
 
       {post.replyToId && (
         <AppText variant="footnote" tone="tertiary">
           {post.replyToDeleted ? "Replying to a deleted post" : `Replying to @${post.replyToUsername}`}
+        </AppText>
+      )}
+      {(post.removed || post.underReview) && (
+        <AppText variant="footnote" tone="warning">
+          {post.removed
+            ? "Removed for breaking the community guidelines. Only you can see it."
+            : "Under review after reports. Only you can see it until a moderator decides."}
         </AppText>
       )}
       {post.body && (

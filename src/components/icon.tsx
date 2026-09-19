@@ -39,6 +39,7 @@ const symbols = {
   send: { ios: "paperplane.fill", android: "send" },
   close: { ios: "xmark", android: "close" },
   notifications: { ios: "bell", android: "notifications" },
+  settings: { ios: "gearshape", android: "settings" },
   personAdd: { ios: "person.badge.plus", android: "person_add" },
 } as const satisfies Record<string, Extract<SymbolViewProps["name"], object>>;
 

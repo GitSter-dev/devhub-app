@@ -75,12 +75,12 @@ export default function HomeScreen() {
                 )}
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Sign out"
+                  accessibilityLabel="Settings"
                   hitSlop={hitSlop}
-                  onPress={() => void sessionManager.signOut()}
+                  onPress={() => router.push("/settings")}
                   style={[styles.iconButton, { borderColor: colors.border, backgroundColor: colors.backgroundSurface }]}
                 >
-                  <Icon name="logout" color={colors.textSecondary} />
+                  <Icon name="settings" color={colors.textSecondary} />
                 </Pressable>
               </View>
             </View>

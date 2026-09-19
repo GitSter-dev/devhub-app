@@ -3,8 +3,9 @@ import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { View } from "react-native";
+import { Alert, View } from "react-native";
 
+import { accountApi } from "@/api/account-api";
 import { toApiError, type ApiError } from "@/api/api-error";
 import { authApi } from "@/api/auth-api";
 import { newIdempotencyKey } from "@/api/idempotency";
@@ -57,10 +58,33 @@ export default function LogInScreen() {
         router.push({ pathname: "/verify-email", params: email ? { email } : {} });
         return;
       }
+      if (apiError.code === "ACCOUNT_DEACTIVATED") {
+        haptics.error();
+        offerRestore(credentials);
+        return;
+      }
       haptics.error();
       setFailure(apiError);
     },
   });
+
+  const offerRestore = (credentials: LoginValues) =>
+    Alert.alert(
+      "This account is scheduled for deletion",
+      "Restore it now and everything comes back, or leave it and it is erased 30 days after you asked.",
+      [
+        { text: "Leave it", style: "cancel" },
+        {
+          text: "Restore",
+          onPress: () => {
+            void accountApi
+              .restore(credentials.identifier, credentials.password)
+              .then((pair) => sessionManager.startSession(pair))
+              .catch((error: unknown) => setFailure(toApiError(error)));
+          },
+        },
+      ],
+    );
 
   const submit = handleSubmit((credentials) => {
     setFailure(null);

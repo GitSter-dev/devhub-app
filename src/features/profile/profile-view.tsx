@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -5,6 +6,8 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { toApiError } from "@/api/api-error";
 import { fetchUserPosts } from "@/api/posts-api";
 import type { FollowList, Profile } from "@/api/profiles-api";
+import type { SheetAction } from "@/components/action-sheet";
+import { actionSheet } from "@/components/action-sheet-host";
 import { AppText } from "@/components/app-text";
 import { Button } from "@/components/button";
 import { FormBanner } from "@/components/form-banner";
@@ -16,6 +19,8 @@ import { followSync, useFollowing } from "@/features/follows/follow-sync";
 import { NotificationsCard } from "@/features/home/notifications-card";
 import { FollowButton } from "@/features/people/person-row";
 import { PostList } from "@/features/posts/post-list";
+import { confirmBlock } from "@/moderation/block-actions";
+import { reportFlow } from "@/moderation/report-store";
 import { postKeys } from "@/features/posts/post-queries";
 import { sessionManager } from "@/session/session-manager";
 import {
@@ -31,6 +36,22 @@ import {
 import { useProfile } from "./profile-queries";
 
 const joinedFormat = new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" });
+
+function profileActions(profile: Profile): SheetAction[] {
+  return [
+    {
+      label: "Report profile",
+      destructive: true,
+      onPress: () =>
+        reportFlow.open({ type: "USER", id: profile.id, username: profile.username, userId: profile.id }),
+    },
+    {
+      label: `Block @${profile.username}`,
+      destructive: true,
+      onPress: () => confirmBlock(profile.id, profile.username, () => router.back()),
+    },
+  ];
+}
 
 type ProfileViewProps = {
   username: string;
@@ -171,6 +192,15 @@ function ProfileBody({ profile, onOpenList, onEditProfile, onEditStack, onMessag
             {onMessage && (
               <Button label="Message" variant="secondary" icon="chat" onPress={() => onMessage(profile.id)} />
             )}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Options for @${profile.username}`}
+              hitSlop={hitSlop}
+              onPress={() => actionSheet.open(profileActions(profile))}
+              style={styles.moreButton}
+            >
+              <Icon name="more" color={colors.textSecondary} size="sm" />
+            </Pressable>
           </View>
         )}
       </View>
@@ -300,6 +330,11 @@ const styles = StyleSheet.create({
   counts: {
     flexDirection: "row",
     gap: spacing.lg,
+  },
+  moreButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.xs,
   },
   actions: {
     alignSelf: "stretch",

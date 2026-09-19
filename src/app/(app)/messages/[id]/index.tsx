@@ -5,7 +5,8 @@ import { Alert, AppState, FlatList, KeyboardAvoidingView, Platform, Pressable, S
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { chatApi, type ChatMessage } from "@/api/chat-api";
-import { ActionSheet, type SheetAction } from "@/components/action-sheet";
+import { actionSheet } from "@/components/action-sheet-host";
+import type { SheetAction } from "@/components/action-sheet";
 import { AppText } from "@/components/app-text";
 import { Button } from "@/components/button";
 import { Icon } from "@/components/icon";
@@ -19,6 +20,7 @@ import { outgoingQueue } from "@/chat/outgoing-queue";
 import { receiptSync } from "@/chat/receipt-sync";
 import { ChatComposer } from "@/features/chat/chat-composer";
 import { conversationHandle, conversationTitle, outgoingTick, systemText, tickFor } from "@/features/chat/conversation-display";
+import { reportFlow } from "@/moderation/report-store";
 import { MessageBubble } from "@/features/chat/message-bubble";
 import { SystemLine } from "@/features/chat/system-line";
 import { TypingRow } from "@/features/chat/typing-row";
@@ -69,7 +71,6 @@ export default function ChatScreen() {
   const { data } = useChatMessages(id);
   const connection = useStore(realtimeConnection.store);
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
-  const [menu, setMenu] = useState<SheetAction[] | null>(null);
   const list = useRef<FlatList<Item>>(null);
 
   const messages = useMemo(() => data?.messages ?? [], [data]);
@@ -129,7 +130,22 @@ export default function ChatScreen() {
     return [
       { label: "Reply", onPress: () => setReplyTo(message) },
       ...(text ? [{ label: "Copy", onPress: () => void Clipboard.setStringAsync(text) }] : []),
-      ...(mine ? [{ label: "Delete for everyone", destructive: true, onPress: () => deleteMessage(message) }] : []),
+      ...(mine
+        ? [{ label: "Delete for everyone", destructive: true, onPress: () => deleteMessage(message) }]
+        : [
+            {
+              label: "Report message",
+              destructive: true,
+              onPress: () =>
+                reportFlow.open({
+                  type: "MESSAGE",
+                  id: message.id,
+                  conversationId: id,
+                  username: message.sender?.username ?? null,
+                  userId: message.sender?.id ?? null,
+                }),
+            },
+          ]),
     ];
   };
 
@@ -174,7 +190,7 @@ export default function ChatScreen() {
         senderName={isGroup && !mine && startsRun ? (message.sender?.displayName ?? null) : null}
         tick={mine ? tickFor(message, conversation) : null}
         onReply={pending ? undefined : () => setReplyTo(message)}
-        onLongPress={pending ? undefined : () => setMenu(messageActions(message, mine))}
+        onLongPress={pending ? undefined : () => actionSheet.open(messageActions(message, mine))}
         onPressQuote={message.replyTo ? () => jumpTo(message.replyTo!.id) : undefined}
       />
     );
@@ -261,7 +277,6 @@ export default function ChatScreen() {
           }}
         />
       )}
-      <ActionSheet visible={menu !== null} actions={menu ?? []} onClose={() => setMenu(null)} />
     </KeyboardAvoidingView>
   );
 }
