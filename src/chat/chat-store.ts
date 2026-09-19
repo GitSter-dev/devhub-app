@@ -74,6 +74,40 @@ async function writeConversation(db: SQLiteDatabase, conversation: Conversation)
   );
 }
 
+let writeQueue: Promise<unknown> = Promise.resolve();
+
+function serialized<T>(task: () => Promise<T>): Promise<T> {
+  const run = writeQueue.then(task, task);
+  writeQueue = run.catch(() => undefined);
+  return run;
+}
+
+async function writeMessages(conversationId: string, messages: ChatMessage[], hasOlder?: boolean): Promise<void> {
+  await chatDb.withExclusiveTransactionAsync(async (tx) => {
+    for (const message of messages) {
+      await tx.runAsync(
+        `INSERT INTO messages (id, conversation_id, seq, payload) VALUES (?, ?, ?, ?)
+         ON CONFLICT (id) DO UPDATE SET payload = excluded.payload`,
+        message.id,
+        conversationId,
+        message.seq,
+        JSON.stringify(message),
+      );
+      if (message.clientMessageId) {
+        await tx.runAsync("DELETE FROM outgoing_messages WHERE client_message_id = ?", message.clientMessageId);
+      }
+    }
+    if (hasOlder !== undefined) {
+      await tx.runAsync(
+        `INSERT INTO message_history (conversation_id, has_older) VALUES (?, ?)
+         ON CONFLICT (conversation_id) DO UPDATE SET has_older = excluded.has_older`,
+        conversationId,
+        hasOlder ? 1 : 0,
+      );
+    }
+  });
+}
+
 export const chatStore = {
   onChange(listener: ChangeListener): () => void {
     listeners.add(listener);
@@ -95,26 +129,33 @@ export const chatStore = {
 
   async saveConversations(conversations: Conversation[]): Promise<void> {
     if (conversations.length === 0) return;
-    await chatDb.withExclusiveTransactionAsync(async (tx) => {
-      for (const conversation of conversations) await writeConversation(tx, conversation);
-    });
+    await serialized(() =>
+      chatDb.withExclusiveTransactionAsync(async (tx) => {
+        for (const conversation of conversations) await writeConversation(tx, conversation);
+      }),
+    );
     changed({ inbox: true, conversationId: conversations.length === 1 ? conversations[0].id : null });
   },
 
   async updateConversation(id: string, update: (conversation: Conversation) => Conversation): Promise<void> {
-    const current = await chatStore.conversation(id);
-    if (!current) return;
-    await writeConversation(chatDb, update(current));
-    changed({ inbox: true, conversationId: id });
+    const written = await serialized(async () => {
+      const current = await chatStore.conversation(id);
+      if (!current) return false;
+      await writeConversation(chatDb, update(current));
+      return true;
+    });
+    if (written) changed({ inbox: true, conversationId: id });
   },
 
   async removeConversation(id: string): Promise<void> {
-    await chatDb.withExclusiveTransactionAsync(async (tx) => {
-      await tx.runAsync("DELETE FROM conversations WHERE id = ?", id);
-      await tx.runAsync("DELETE FROM messages WHERE conversation_id = ?", id);
-      await tx.runAsync("DELETE FROM message_history WHERE conversation_id = ?", id);
-      await tx.runAsync("DELETE FROM outgoing_messages WHERE conversation_id = ?", id);
-    });
+    await serialized(() =>
+      chatDb.withExclusiveTransactionAsync(async (tx) => {
+        await tx.runAsync("DELETE FROM conversations WHERE id = ?", id);
+        await tx.runAsync("DELETE FROM messages WHERE conversation_id = ?", id);
+        await tx.runAsync("DELETE FROM message_history WHERE conversation_id = ?", id);
+        await tx.runAsync("DELETE FROM outgoing_messages WHERE conversation_id = ?", id);
+      }),
+    );
     changed({ inbox: true, conversationId: id });
   },
 
@@ -151,57 +192,43 @@ export const chatStore = {
   },
 
   async saveMessages(conversationId: string, messages: ChatMessage[], hasOlder?: boolean): Promise<void> {
-    await chatDb.withExclusiveTransactionAsync(async (tx) => {
-      for (const message of messages) {
-        await tx.runAsync(
-          `INSERT INTO messages (id, conversation_id, seq, payload) VALUES (?, ?, ?, ?)
-           ON CONFLICT (id) DO UPDATE SET payload = excluded.payload`,
-          message.id,
-          conversationId,
-          message.seq,
-          JSON.stringify(message),
-        );
-        if (message.clientMessageId) {
-          await tx.runAsync("DELETE FROM outgoing_messages WHERE client_message_id = ?", message.clientMessageId);
-        }
-      }
-      if (hasOlder !== undefined) {
-        await tx.runAsync(
-          `INSERT INTO message_history (conversation_id, has_older) VALUES (?, ?)
-           ON CONFLICT (conversation_id) DO UPDATE SET has_older = excluded.has_older`,
-          conversationId,
-          hasOlder ? 1 : 0,
-        );
-      }
-    });
+    await serialized(() => writeMessages(conversationId, messages, hasOlder));
     changed({ inbox: false, conversationId });
   },
 
   async pruneHistory(conversationId: string): Promise<void> {
-    const cutoff = await chatDb.getFirstAsync<{ seq: number }>(
-      "SELECT seq FROM messages WHERE conversation_id = ? ORDER BY seq DESC LIMIT 1 OFFSET ?",
-      conversationId,
-      HISTORY_LIMIT,
-    );
-    if (!cutoff) return;
-    await chatDb.withExclusiveTransactionAsync(async (tx) => {
-      await tx.runAsync("DELETE FROM messages WHERE conversation_id = ? AND seq <= ?", conversationId, cutoff.seq);
-      await tx.runAsync(
-        `INSERT INTO message_history (conversation_id, has_older) VALUES (?, 1)
-         ON CONFLICT (conversation_id) DO UPDATE SET has_older = 1`,
+    const pruned = await serialized(async () => {
+      const cutoff = await chatDb.getFirstAsync<{ seq: number }>(
+        "SELECT seq FROM messages WHERE conversation_id = ? ORDER BY seq DESC LIMIT 1 OFFSET ?",
         conversationId,
+        HISTORY_LIMIT,
       );
+      if (!cutoff) return false;
+      await chatDb.withExclusiveTransactionAsync(async (tx) => {
+        await tx.runAsync("DELETE FROM messages WHERE conversation_id = ? AND seq <= ?", conversationId, cutoff.seq);
+        await tx.runAsync(
+          `INSERT INTO message_history (conversation_id, has_older) VALUES (?, 1)
+           ON CONFLICT (conversation_id) DO UPDATE SET has_older = 1`,
+          conversationId,
+        );
+      });
+      return true;
     });
+    if (!pruned) return;
     changed({ inbox: false, conversationId });
   },
 
   async updateMessages(conversationId: string, update: (message: ChatMessage) => ChatMessage | null): Promise<void> {
-    const messages = await chatStore.messages(conversationId);
-    const updated = messages.flatMap((message) => {
-      const next = update(message);
-      return next && next !== message ? [next] : [];
+    const count = await serialized(async () => {
+      const messages = await chatStore.messages(conversationId);
+      const updated = messages.flatMap((message) => {
+        const next = update(message);
+        return next && next !== message ? [next] : [];
+      });
+      if (updated.length > 0) await writeMessages(conversationId, updated);
+      return updated.length;
     });
-    if (updated.length > 0) await chatStore.saveMessages(conversationId, updated);
+    if (count > 0) changed({ inbox: false, conversationId });
   },
 
   async outgoing(conversationId?: string): Promise<OutgoingRow[]> {
@@ -215,48 +242,61 @@ export const chatStore = {
   },
 
   async enqueue(row: OutgoingRow): Promise<void> {
-    await chatDb.runAsync(
-      `INSERT INTO outgoing_messages (client_message_id, conversation_id, body, code, code_language, reply_to_id,
+    await serialized(() =>
+      chatDb.runAsync(
+        `INSERT INTO outgoing_messages (client_message_id, conversation_id, body, code, code_language, reply_to_id,
          reply_preview, created_at, state, attempts, error)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      row.clientMessageId,
-      row.conversationId,
-      row.body,
-      row.code,
-      row.codeLanguage,
-      row.replyToId,
-      row.replyPreview ? JSON.stringify(row.replyPreview) : null,
-      row.createdAt,
-      row.state,
-      row.attempts,
-      row.error,
+        row.clientMessageId,
+        row.conversationId,
+        row.body,
+        row.code,
+        row.codeLanguage,
+        row.replyToId,
+        row.replyPreview ? JSON.stringify(row.replyPreview) : null,
+        row.createdAt,
+        row.state,
+        row.attempts,
+        row.error,
+      ),
     );
     changed({ inbox: false, conversationId: row.conversationId });
   },
 
-  async markOutgoing(clientMessageId: string, conversationId: string, state: OutgoingState, attempts: number,
-                     error: string | null): Promise<void> {
-    await chatDb.runAsync(
-      "UPDATE outgoing_messages SET state = ?, attempts = ?, error = ? WHERE client_message_id = ?",
-      state,
-      attempts,
-      error,
-      clientMessageId,
+  async markOutgoing(
+    clientMessageId: string,
+    conversationId: string,
+    state: OutgoingState,
+    attempts: number,
+    error: string | null,
+  ): Promise<void> {
+    await serialized(() =>
+      chatDb.runAsync(
+        "UPDATE outgoing_messages SET state = ?, attempts = ?, error = ? WHERE client_message_id = ?",
+        state,
+        attempts,
+        error,
+        clientMessageId,
+      ),
     );
     changed({ inbox: false, conversationId });
   },
 
   async removeOutgoing(clientMessageId: string, conversationId: string): Promise<void> {
-    await chatDb.runAsync("DELETE FROM outgoing_messages WHERE client_message_id = ?", clientMessageId);
+    await serialized(() =>
+      chatDb.runAsync("DELETE FROM outgoing_messages WHERE client_message_id = ?", clientMessageId),
+    );
     changed({ inbox: false, conversationId });
   },
 
   async wipe(): Promise<void> {
-    await chatDb.withExclusiveTransactionAsync(async (tx) => {
-      await tx.execAsync(
-        "DELETE FROM conversations; DELETE FROM messages; DELETE FROM message_history; DELETE FROM outgoing_messages;",
-      );
-    });
+    await serialized(() =>
+      chatDb.withExclusiveTransactionAsync(async (tx) => {
+        await tx.execAsync(
+          "DELETE FROM conversations; DELETE FROM messages; DELETE FROM message_history; DELETE FROM outgoing_messages;",
+        );
+      }),
+    );
     changed({ inbox: true, conversationId: null });
   },
 };
