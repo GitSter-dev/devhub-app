@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { AppState } from "react-native";
 
 import { queryClient } from "@/api/query-client";
+import { followSync } from "@/features/follows/follow-sync";
 
 import { sessionManager } from "./session-manager";
 import { useSessionState } from "./use-session";
@@ -23,7 +24,10 @@ export function SessionEffects() {
   }, []);
 
   useEffect(() => {
-    if (status === "signedOut" || status === "reauthRequired") queryClient.clear();
+    if (status === "signedOut" || status === "reauthRequired") {
+      queryClient.clear();
+      followSync.reset();
+    }
   }, [status]);
 
   useEffect(() => {
