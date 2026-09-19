@@ -1,4 +1,4 @@
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -20,7 +20,8 @@ export default function MessagesScreen() {
   const myId = useCurrentUserId();
   const inbox = useInbox().data ?? [];
   const requests = useRequests().data ?? [];
-  const [segment, setSegment] = useState<Segment>("chats");
+  const { tab } = useLocalSearchParams<{ tab?: string }>();
+  const [segment, setSegment] = useState<Segment>(tab === "requests" ? "requests" : "chats");
 
   useFocusEffect(
     useCallback(() => {

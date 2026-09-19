@@ -1,11 +1,17 @@
 import type { ChatMessage } from "@/api/chat-api";
 
-export type RealtimeEvent =
+export type ChatEvent =
   | { type: "MESSAGE_CREATED"; conversationId: string; data: ChatMessage }
   | { type: "MESSAGE_DELETED"; conversationId: string; data: { messageId: string } }
   | { type: "RECEIPT_UPDATED"; conversationId: string; data: { userId: string; deliveredSeq: number; readSeq: number } }
   | { type: "CONVERSATION_UPDATED"; conversationId: string; data: Record<string, never> }
   | { type: "TYPING"; conversationId: string; data: { userId: string; displayName: string } };
+
+export type RealtimeEvent = ChatEvent | { type: "NOTIFICATIONS_CHANGED"; conversationId: null; data: Record<string, never> };
+
+export function isChatEvent(event: RealtimeEvent): event is ChatEvent {
+  return event.type !== "NOTIFICATIONS_CHANGED";
+}
 
 type EventListener = (event: RealtimeEvent) => void;
 type ResyncListener = () => void;

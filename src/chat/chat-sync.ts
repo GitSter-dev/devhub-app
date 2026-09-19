@@ -2,7 +2,7 @@ import { AppState } from "react-native";
 
 import { toApiError } from "@/api/api-error";
 import { chatApi } from "@/api/chat-api";
-import type { RealtimeEvent } from "@/realtime/realtime-events";
+import type { ChatEvent } from "@/realtime/realtime-events";
 import { sessionManager } from "@/session/session-manager";
 
 import { chatStore } from "./chat-store";
@@ -76,7 +76,7 @@ export const chatSync = {
       await chatStore.saveMessages(conversationId, page.items, page.hasMore);
     }),
 
-  handle: (event: RealtimeEvent) =>
+  handle: (event: ChatEvent) =>
     quietly(async () => {
       const conversationId = event.conversationId;
       switch (event.type) {

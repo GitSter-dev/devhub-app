@@ -10,7 +10,9 @@ import { FormBanner } from "@/components/form-banner";
 import { Icon } from "@/components/icon";
 import { TextLink } from "@/components/text-link";
 import { Wordmark } from "@/components/wordmark";
+import { BadgedIconButton } from "@/features/home/badged-icon-button";
 import { NotificationsCard } from "@/features/home/notifications-card";
+import { useUnseenNotifications } from "@/features/notifications/notification-queries";
 import { PostList } from "@/features/posts/post-list";
 import { postKeys } from "@/features/posts/post-queries";
 import { usePushState } from "@/push/push-state";
@@ -26,6 +28,7 @@ export default function HomeScreen() {
   const push = usePushState();
   const offline = session.status === "signedIn" && !session.online;
   const unread = useUnreadTotal();
+  const unseen = useUnseenNotifications();
 
   return (
     <View style={styles.screen}>
@@ -38,22 +41,13 @@ export default function HomeScreen() {
             <View style={styles.bar}>
               <Wordmark />
               <View style={styles.actions}>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={unread > 0 ? `Messages, ${unread} unread` : "Messages"}
-                  hitSlop={hitSlop}
-                  onPress={() => router.push("/messages")}
-                  style={[styles.iconButton, { borderColor: colors.border, backgroundColor: colors.backgroundSurface }]}
-                >
-                  <Icon name="chat" color={colors.textSecondary} />
-                  {unread > 0 && (
-                    <View style={[styles.badge, { backgroundColor: colors.accentSolid, borderColor: colors.backgroundCanvas }]}>
-                      <AppText variant="caption" style={{ color: colors.onAccentSolid }}>
-                        {unread > 99 ? "99+" : unread}
-                      </AppText>
-                    </View>
-                  )}
-                </Pressable>
+                <BadgedIconButton icon="chat" label="Messages" count={unread} onPress={() => router.push("/messages")} />
+                <BadgedIconButton
+                  icon="notifications"
+                  label="Notifications"
+                  count={unseen}
+                  onPress={() => router.push("/notifications")}
+                />
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Find developers"
@@ -158,18 +152,6 @@ const styles = StyleSheet.create({
   empty: {
     gap: spacing.md,
     paddingTop: spacing.xl,
-  },
-  badge: {
-    position: "absolute",
-    top: -spacing.xxs,
-    right: -spacing.xxs,
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    paddingHorizontal: spacing.xxs,
-    alignItems: "center",
-    justifyContent: "center",
   },
   fab: {
     position: "absolute",
