@@ -1,5 +1,6 @@
 import { useInfiniteQuery, type QueryKey } from "@tanstack/react-query";
-import { useState, type ReactElement } from "react";
+import { useScrollToTop } from "expo-router";
+import { useRef, useState, type ReactElement } from "react";
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -26,6 +27,8 @@ export function PostList({ queryKey, fetchPage, header, empty, enabled = true, o
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
   const [pulling, setPulling] = useState(false);
+  const list = useRef<FlatList<PostPage["items"][number]>>(null);
+  useScrollToTop(list);
   const query = useInfiniteQuery({
     queryKey,
     queryFn: ({ pageParam }) => fetchPage(pageParam),
@@ -42,6 +45,7 @@ export function PostList({ queryKey, fetchPage, header, empty, enabled = true, o
 
   return (
     <FlatList
+      ref={list}
       style={{ backgroundColor: colors.backgroundCanvas }}
       data={enabled ? posts : []}
       keyExtractor={(post) => post.id}

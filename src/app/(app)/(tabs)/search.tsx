@@ -1,10 +1,12 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useScrollToTop } from "expo-router";
+import { useRef, useState } from "react";
 import { ActivityIndicator, FlatList, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { toApiError } from "@/api/api-error";
 import { searchPeople } from "@/api/people-api";
+import type { PersonSummary } from "@/api/profiles-api";
 import { AppText } from "@/components/app-text";
 import { Button } from "@/components/button";
 import { FormBanner } from "@/components/form-banner";
@@ -29,10 +31,13 @@ export default function SearchScreen() {
     placeholderData: keepPreviousData,
   });
   const people = query.length > 0 ? (results.data ?? []) : [];
+  const list = useRef<FlatList<PersonSummary>>(null);
+  useScrollToTop(list);
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.backgroundCanvas }]}>
       <FlatList
+        ref={list}
         data={people}
         keyExtractor={(person) => person.id}
         renderItem={({ item }) => <ConnectedPersonRow person={item} />}

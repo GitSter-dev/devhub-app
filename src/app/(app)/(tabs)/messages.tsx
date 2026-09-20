@@ -1,11 +1,12 @@
-import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback, useState } from "react";
+import { router, useFocusEffect, useLocalSearchParams, useScrollToTop } from "expo-router";
+import { useCallback, useRef, useState } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/app-text";
 import { Icon } from "@/components/icon";
 import { ScreenHeader } from "@/components/screen-header";
+import type { Conversation } from "@/api/chat-api";
 import { useInbox, useRequests } from "@/chat/chat-queries";
 import { chatSync } from "@/chat/chat-sync";
 import { useCurrentUserId } from "@/chat/current-user-id";
@@ -30,10 +31,13 @@ export default function MessagesScreen() {
   );
 
   const data = segment === "chats" ? inbox : requests;
+  const list = useRef<FlatList<Conversation>>(null);
+  useScrollToTop(list);
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.backgroundCanvas }]}>
       <FlatList
+        ref={list}
         data={data}
         keyExtractor={(conversation) => conversation.id}
         renderItem={({ item }) => (

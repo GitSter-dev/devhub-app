@@ -1,5 +1,5 @@
-import { useFocusEffect } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useFocusEffect, useScrollToTop } from "expo-router";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -31,6 +31,8 @@ export default function NotificationsScreen() {
   const items = useMemo(() => query.data?.pages.flatMap((page) => page.items) ?? [], [query.data]);
   const [fresh, setFresh] = useState<ReadonlySet<string>>(() => new Set());
   const newest = items[0]?.updatedAt ?? null;
+  const list = useRef<FlatList<ActivityNotification>>(null);
+  useScrollToTop(list);
 
   const newlyUnseen = items.filter((item) => !item.seen && !fresh.has(item.id));
   if (newlyUnseen.length > 0) setFresh(new Set([...fresh, ...newlyUnseen.map((item) => item.id)]));
@@ -44,6 +46,7 @@ export default function NotificationsScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: colors.backgroundCanvas }]}>
       <FlatList
+        ref={list}
         data={items}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <NotificationRow notification={item} fresh={fresh.has(item.id)} onPress={() => open(item)} />}
