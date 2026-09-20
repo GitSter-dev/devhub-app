@@ -10,22 +10,25 @@ import { Icon } from "./icon";
 type ScreenHeaderProps = {
   title?: string;
   right?: ReactNode;
+  showBack?: boolean;
 };
 
-export function ScreenHeader({ title, right }: ScreenHeaderProps) {
+export function ScreenHeader({ title, right, showBack = true }: ScreenHeaderProps) {
   const colors = useThemeColors();
 
   return (
     <View style={styles.header}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Back"
-        hitSlop={hitSlop}
-        onPress={() => router.back()}
-        style={[styles.back, { borderColor: colors.border, backgroundColor: colors.backgroundSurface }]}
-      >
-        <Icon name="back" color={colors.textPrimary} />
-      </Pressable>
+      {showBack && router.canGoBack() && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+          hitSlop={hitSlop}
+          onPress={() => router.back()}
+          style={[styles.back, { borderColor: colors.border, backgroundColor: colors.backgroundSurface }]}
+        >
+          <Icon name="back" color={colors.textPrimary} />
+        </Pressable>
+      )}
       <AppText variant="headline" numberOfLines={1} style={styles.title} accessibilityRole="header">
         {title ?? ""}
       </AppText>

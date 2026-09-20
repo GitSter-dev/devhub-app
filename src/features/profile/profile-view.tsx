@@ -31,11 +31,22 @@ import {
   layoutSpacing,
   spacing,
   useTheme,
+  useThemeColors,
 } from "@/theme";
 
 import { useProfile } from "./profile-queries";
 
 const joinedFormat = new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" });
+
+function SettingsButton({ onPress }: { onPress: () => void }) {
+  const colors = useThemeColors();
+
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel="Settings" hitSlop={hitSlop} onPress={onPress}>
+      <Icon name="settings" color={colors.textSecondary} />
+    </Pressable>
+  );
+}
 
 function profileActions(profile: Profile): SheetAction[] {
   return [
@@ -57,12 +68,23 @@ type ProfileViewProps = {
   username: string;
   onOpenList?: (list: FollowList) => void;
   onEditProfile?: () => void;
+  onOpenSettings?: () => void;
+  showBack?: boolean;
   onEditStack?: () => void;
   onMessage?: (userId: string) => void;
   showPosts?: boolean;
 };
 
-export function ProfileView({ username, onOpenList, onEditProfile, onEditStack, onMessage, showPosts = false }: ProfileViewProps) {
+export function ProfileView({
+  username,
+  onOpenList,
+  onEditProfile,
+  onEditStack,
+  onMessage,
+  onOpenSettings,
+  showBack = true,
+  showPosts = false,
+}: ProfileViewProps) {
   const profile = useProfile(username);
 
   return (
@@ -74,12 +96,17 @@ export function ProfileView({ username, onOpenList, onEditProfile, onEditStack, 
       empty="No posts yet."
       header={
         <View style={styles.column}>
-          <ScreenHeader title={profile.data ? `@${profile.data.username}` : undefined} />
+          <ScreenHeader
+            title={profile.data ? `@${profile.data.username}` : undefined}
+            showBack={showBack}
+            right={onOpenSettings ? <SettingsButton onPress={onOpenSettings} /> : undefined}
+          />
           {profile.data ? (
             <ProfileBody
               profile={profile.data}
               onOpenList={onOpenList}
               onEditProfile={onEditProfile}
+              onOpenSettings={onOpenSettings}
               onEditStack={onEditStack}
               onMessage={onMessage}
               showPosts={showPosts}
@@ -112,7 +139,7 @@ function ProfileSkeleton() {
 
 type ProfileBodyProps = Omit<ProfileViewProps, "username"> & { profile: Profile };
 
-function ProfileBody({ profile, onOpenList, onEditProfile, onEditStack, onMessage, showPosts }: ProfileBodyProps) {
+function ProfileBody({ profile, onOpenList, onEditProfile, onEditStack, onMessage, onOpenSettings, showPosts }: ProfileBodyProps) {
   const { colors, shadows } = useTheme();
   const following = useFollowing().get(profile.id) ?? profile.following;
   const followerCount = profile.followerCount + (following ? 1 : 0) - (profile.following ? 1 : 0);

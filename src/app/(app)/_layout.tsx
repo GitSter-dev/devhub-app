@@ -8,7 +8,7 @@ import { NotificationTapEffects } from "@/push/notification-taps";
 import { PushEffects } from "@/push/push-effects";
 import { RealtimeEffects } from "@/realtime/realtime-effects";
 
-export const unstable_settings = { anchor: "index" };
+export const unstable_settings = { anchor: "(tabs)" };
 
 export default function AppLayout() {
   return (
@@ -21,7 +21,7 @@ export default function AppLayout() {
       <ActionSheetHost />
       <ReportSheet />
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
+        <Stack.Screen name="(tabs)" />
         <Stack.Screen name="compose" options={{ presentation: "modal" }} />
       </Stack>
     </>

@@ -48,6 +48,7 @@ export default function MessagesScreen() {
           <View style={styles.header}>
             <ScreenHeader
               title="Messages"
+              showBack={false}
               right={
                 <Pressable
                   accessibilityRole="button"

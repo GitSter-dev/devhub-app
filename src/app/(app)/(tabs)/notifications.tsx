@@ -63,7 +63,7 @@ export default function NotificationsScreen() {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListHeaderComponent={
           <View style={styles.header}>
-            <ScreenHeader title="Notifications" />
+            <ScreenHeader title="Notifications" showBack={false} />
           </View>
         }
         ListEmptyComponent={

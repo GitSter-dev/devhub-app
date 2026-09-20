@@ -42,7 +42,7 @@ export default function SearchScreen() {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListHeaderComponent={
           <View style={styles.header}>
-            <ScreenHeader title="Find developers" />
+            <ScreenHeader title="Find developers" showBack={false} />
             <TextField
               label="Name or @username"
               value={text}

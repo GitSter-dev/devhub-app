@@ -40,6 +40,7 @@ const symbols = {
   close: { ios: "xmark", android: "close" },
   notifications: { ios: "bell", android: "notifications" },
   settings: { ios: "gearshape", android: "settings" },
+  home: { ios: "house", android: "home" },
   personAdd: { ios: "person.badge.plus", android: "person_add" },
 } as const satisfies Record<string, Extract<SymbolViewProps["name"], object>>;
 
