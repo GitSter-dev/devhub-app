@@ -12,6 +12,7 @@ type Entry = {
   retries: number;
   timer: ReturnType<typeof setTimeout> | null;
   inFlight: boolean;
+  touched: boolean;
 };
 
 function isWorthRetrying(error: ApiError): boolean {
@@ -37,6 +38,7 @@ export class ToggleSync {
 
   toggle(id: string): void {
     const entry = this.entryFor(id);
+    entry.touched = true;
     entry.desired = !entry.desired;
     entry.retries = 0;
     this.publish();
@@ -45,10 +47,18 @@ export class ToggleSync {
 
   seed(id: string, on: boolean): void {
     const entry = this.entryFor(id);
-    if (entry.timer || entry.inFlight || entry.desired !== entry.confirmed) return;
+    if (entry.touched || entry.timer || entry.inFlight || entry.desired !== entry.confirmed) return;
     if (entry.confirmed === on) return;
     entry.confirmed = on;
     entry.desired = on;
+    this.publish();
+  }
+
+  forget(id: string): void {
+    const entry = this.entries.get(id);
+    if (!entry) return;
+    if (entry.timer) clearTimeout(entry.timer);
+    this.entries.delete(id);
     this.publish();
   }
 
@@ -63,7 +73,7 @@ export class ToggleSync {
   private entryFor(id: string): Entry {
     let entry = this.entries.get(id);
     if (!entry) {
-      entry = { confirmed: false, desired: false, retries: 0, timer: null, inFlight: false };
+      entry = { confirmed: false, desired: false, retries: 0, timer: null, inFlight: false, touched: false };
       this.entries.set(id, entry);
     }
     return entry;

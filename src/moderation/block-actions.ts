@@ -4,6 +4,7 @@ import { toApiError } from "@/api/api-error";
 import { blocksApi } from "@/api/blocks-api";
 import { queryClient } from "@/api/query-client";
 import { haptics } from "@/feedback/haptics";
+import { followSync } from "@/features/follows/follow-sync";
 import { sessionManager } from "@/session/session-manager";
 
 export function confirmBlock(userId: string, username: string, onBlocked?: () => void): void {
@@ -20,6 +21,7 @@ export function confirmBlock(userId: string, username: string, onBlocked?: () =>
             .block(sessionManager.client, userId)
             .then(async () => {
               haptics.success();
+              followSync.forget(userId);
               await queryClient.invalidateQueries();
               onBlocked?.();
             })
@@ -35,6 +37,7 @@ export function confirmBlock(userId: string, username: string, onBlocked?: () =>
 
 export function unblock(userId: string): Promise<void> {
   return blocksApi.unblock(sessionManager.client, userId).then(async () => {
+    followSync.forget(userId);
     await queryClient.invalidateQueries();
   });
 }
