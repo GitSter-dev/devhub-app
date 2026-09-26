@@ -6,4 +6,8 @@ if (!apiUrl) {
 
 const wsUrl = `${apiUrl.replace(/^http/, "ws").replace(/\/+$/, "")}/ws`;
 
-export const env = { apiUrl, wsUrl } as const;
+// Where an outdated build sends people. The APK is sideloaded, so this is the
+// latest GitHub release rather than a store listing.
+const updateUrl = process.env.EXPO_PUBLIC_UPDATE_URL ?? "https://github.com/GitSter-dev/devhub-app/releases/latest";
+
+export const env = { apiUrl, wsUrl, updateUrl } as const;

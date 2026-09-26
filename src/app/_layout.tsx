@@ -23,6 +23,8 @@ import { SessionEffects } from "@/session/session-effects";
 import { useSessionState } from "@/session/use-session";
 import { useSetupStatus } from "@/setup/setup-status";
 import { navigationTheme, ThemeProvider, useColorScheme, useThemeColors } from "@/theme";
+import { UpdateRequiredScreen } from "@/update/update-required-screen";
+import { useUpdateRequired } from "@/update/update-required";
 
 // Hold the splash until the type ramp is real. Showing Inter's metrics with the
 // system face substituted, then swapping, is worse than a beat of splash.
@@ -40,6 +42,7 @@ export default function RootLayout() {
     JetBrainsMono_500Medium,
   });
   const fontsReady = fontsLoaded || Boolean(fontError);
+  const updateRequired = useUpdateRequired();
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -47,7 +50,7 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
             <SessionEffects />
-            {fontsReady && <ThemedNavigation />}
+            {fontsReady && (updateRequired ? <UpdateRequiredScreen /> : <ThemedNavigation />)}
           </ThemeProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
