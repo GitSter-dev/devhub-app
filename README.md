@@ -1,56 +1,92 @@
-# Welcome to your Expo app 👋
+<p align="center">
+  <img src="assets/images/icon.png" width="96" alt="DevHub logo" />
+</p>
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+<h1 align="center">DevHub</h1>
 
-## Get started
+<p align="center">
+  <b>A social network for developers.</b> Share posts with real code, follow people who work
+  on what you work on, and chat in real time. Built with Expo and React Native.
+</p>
 
-1. Install dependencies
+<p align="center">
+  <a href="https://github.com/GitSter-dev/devhub-app/releases/latest"><img src="https://img.shields.io/github/v/release/GitSter-dev/devhub-app?label=Download%20APK&color=10B981" alt="Download APK" /></a>
+  <a href="https://github.com/GitSter-dev/devhub-app/actions/workflows/test.yml"><img src="https://github.com/GitSter-dev/devhub-app/actions/workflows/test.yml/badge.svg" alt="tests" /></a>
+  <img src="https://img.shields.io/badge/Expo_SDK-57-000020" alt="Expo SDK 57" />
+  <img src="https://img.shields.io/badge/React_Native-0.86-61DAFB" alt="React Native 0.86" />
+  <img src="https://img.shields.io/badge/TypeScript-6-3178C6" alt="TypeScript" />
+</p>
 
-   ```bash
-   npm install
-   ```
+<p align="center">
+  Part of DevHub: <b>Mobile app</b> · <a href="https://github.com/GitSter-dev/devhub-backend">Backend</a> · <a href="https://github.com/GitSter-dev/devhub-console">Moderator console</a>
+</p>
 
-2. Start the app
+<p align="center">
+  <img src="docs/screenshots/feed.png" width="200" alt="Home feed" />
+  <img src="docs/screenshots/post.png" width="200" alt="A post with code" />
+  <img src="docs/screenshots/chat.png" width="200" alt="Realtime chat" />
+  <img src="docs/screenshots/profile.png" width="200" alt="Profile" />
+</p>
 
-   ```bash
-   npx expo start
-   ```
+## What it does
 
-In the output, you'll find options to open the app in a
+- **Onboarding that sets you up.** Pick your stack and topics, then follow suggested people so
+  your feed isn't empty on day one.
+- **A feed made for code.** Write posts with code blocks and topic tags, reply in threads, like
+  and follow.
+- **Realtime chat.** Direct and group conversations with typing indicators, delivered/read ticks,
+  replies and message requests from people you don't follow yet.
+- **Notifications.** In-app and push. Tapping one opens the right screen.
+- **Safety built in.** Block people, report posts and users. Reports go to the
+  [moderation console](https://github.com/GitSter-dev/devhub-console).
+- **Light and dark themes**, haptics and native-feeling motion.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Engineering highlights
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- **Chat that works on bad networks.** Outgoing messages go to a local SQLite outbox first and are
+  retried with backoff using idempotency keys, so a message is never lost or sent twice. After a
+  reconnect, the app fetches the messages it missed by sequence number.
+- **Instant likes and follows.** The UI updates immediately. Rapid taps are merged into one request,
+  and failures retry quietly, respecting the server's `Retry-After`.
+- **A careful retry policy.** Reads retry automatically. A `POST` is only repeated when it carries an
+  idempotency key, so a flaky connection can't create duplicate posts.
+- **A resilient live connection.** The WebSocket reconnects with jittered backoff and reacts to the
+  phone going offline or coming back.
+- **A custom design system and state layer.** Themed components and a small typed store, with no
+  Redux. The React Compiler and typed routes are enabled.
+- **A trustworthy release pipeline.** Pushing a version tag builds a signed APK. CI checks the
+  signing certificate and the backend the build points at before publishing it.
 
-## Get a fresh project
+## Tech stack
 
-When you're ready, run:
+| Area | Choices |
+|---|---|
+| App | Expo SDK 57, React Native 0.86, React 19, TypeScript, Expo Router (typed routes) |
+| Data | TanStack Query, ky, zod, react-hook-form |
+| Realtime & storage | STOMP over WebSocket, expo-sqlite, expo-secure-store |
+| UI | Reanimated 4, Gesture Handler, expo-image, custom design system |
+| Push | expo-notifications with Firebase Cloud Messaging |
+| Quality | Vitest, Testing Library, MSW, ESLint, GitHub Actions |
+
+## Run it locally
+
+You need Node 24, pnpm and an Android emulator or device. The app talks to the
+[DevHub backend](https://github.com/GitSter-dev/devhub-backend), which you can run locally.
 
 ```bash
-npm run reset-project
+pnpm install
+cp .env.example .env.local   # point EXPO_PUBLIC_API_URL at your backend
+pnpm android                 # builds the dev client and launches it
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Testing & delivery
 
-### Other setup steps
+- **272 tests** in two suites: fast unit tests for the sync, retry and chat logic, and screen tests
+  that render real screens against a mocked API (MSW). Run them with `pnpm test`.
+- Every push and pull request runs lint, the type-checker and the tests.
+- Tagging `vX.Y.Z` runs the tests, builds and verifies a signed APK, and publishes it to
+  [Releases](https://github.com/GitSter-dev/devhub-app/releases).
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+---
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+© 2026 [GProgrammer1](https://github.com/GProgrammer1). The source is public for review but not licensed for reuse.
