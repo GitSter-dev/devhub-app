@@ -30,7 +30,8 @@ export type ServerErrorCode =
   | "CANNOT_BLOCK_SELF"
   | "ACCOUNT_SUSPENDED"
   | "ACCOUNT_BANNED"
-  | "ACCOUNT_DEACTIVATED";
+  | "ACCOUNT_DEACTIVATED"
+  | "APP_UPDATE_REQUIRED";
 
 export type ClientErrorCode = "NETWORK_ERROR" | "TIMEOUT" | "UNEXPECTED";
 

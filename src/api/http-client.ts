@@ -2,7 +2,10 @@ import ky, { isHTTPError, isNetworkError, isTimeoutError, type KyInstance, type 
 
 import { env } from "@/config/env";
 
+import { updateRequiredStore } from "@/update/update-required";
+
 import { ApiError } from "./api-error";
+import { identifyClient } from "./client-identity";
 import { isErrorEnvelope, type ApiEnvelope } from "./envelope";
 import { platformFetch } from "./platform-fetch";
 import { retryPolicy, retryAfterSeconds } from "./retry-policy";
@@ -28,7 +31,14 @@ export const publicClient: KyInstance = ky.create({
   timeout: REQUEST_TIMEOUT_MS,
   retry: retryPolicy,
   hooks: {
-    beforeError: [({ error }) => toApiError(error)],
+    beforeRequest: [({ request }) => identifyClient(request)],
+    beforeError: [
+      ({ error }) => {
+        const apiError = toApiError(error);
+        if (apiError instanceof ApiError && apiError.code === "APP_UPDATE_REQUIRED") updateRequiredStore.set(true);
+        return apiError;
+      },
+    ],
   },
 });
 
