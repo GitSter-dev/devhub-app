@@ -80,7 +80,9 @@ jobs:
           ORG_GRADLE_PROJECT_DEVHUB_RELEASE_STORE_PASSWORD: ${{ secrets.DEVHUB_RELEASE_STORE_PASSWORD }}
           ORG_GRADLE_PROJECT_DEVHUB_RELEASE_KEY_ALIAS: ${{ secrets.DEVHUB_RELEASE_KEY_ALIAS }}
           ORG_GRADLE_PROJECT_DEVHUB_RELEASE_KEY_PASSWORD: ${{ secrets.DEVHUB_RELEASE_KEY_PASSWORD }}
-        run: ./gradlew assembleRelease --no-daemon
+        # Phones only: emulator ABIs (x86, x86_64) double the native compile
+        # time and the APK size for devices nobody sideloads onto.
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
 
       - name: Verify the signature and the backend it talks to
         run: |
