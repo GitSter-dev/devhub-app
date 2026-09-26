@@ -86,8 +86,8 @@ export const chatSync = {
           if (message.sender) typing.stopped(conversationId, message.sender.id);
           const latest = await chatStore.latestSeq(conversationId);
           if (latest > 0) {
-            await chatStore.saveMessages(conversationId, [message]);
             if (message.seq > latest + 1) await chatSync.syncMessages(conversationId);
+            await chatStore.saveMessages(conversationId, [message]);
           }
           if (await chatStore.conversation(conversationId)) {
             await chatStore.updateConversation(conversationId, (conversation) =>

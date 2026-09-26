@@ -43,7 +43,7 @@ export function systemText(message: ChatMessage, myId: string | null): string {
     case "MEMBER_LEFT":
       return `${actor} left`;
     case "OWNER_CHANGED":
-      return `${target} is now the group owner`;
+      return `${target} ${target === "You" ? "are" : "is"} now the group owner`;
   }
 }
 

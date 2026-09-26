@@ -67,7 +67,9 @@ export function createAuthedClient(source: AccessTokenSource): KyInstance {
       ],
       beforeError: [
         ({ error }) => {
-          if (isNetworkError(error) || isTimeoutError(error)) source.reportConnectivity(false);
+          if (isNetworkError(error) || isTimeoutError(error) || (error instanceof ApiError && error.isConnectivity)) {
+            source.reportConnectivity(false);
+          }
           return error;
         },
       ],
