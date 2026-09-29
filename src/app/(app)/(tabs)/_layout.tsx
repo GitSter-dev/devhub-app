@@ -2,6 +2,7 @@ import { Tabs } from "expo-router";
 import type { ColorValue } from "react-native";
 
 import { useUnreadTotal } from "@/chat/chat-queries";
+import { AppText } from "@/components/app-text";
 import { Icon, type IconName } from "@/components/icon";
 import { useUnseenNotifications } from "@/features/notifications/notification-queries";
 import { useTheme } from "@/theme";
@@ -13,6 +14,14 @@ function tabIcon(name: IconName) {
   return TabIcon;
 }
 
+function TabLabel({ color, children }: { color: ColorValue; children: string }) {
+  return (
+    <AppText variant="caption" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} center style={{ color }}>
+      {children}
+    </AppText>
+  );
+}
+
 export default function TabsLayout() {
   const { colors } = useTheme();
   const unread = useUnreadTotal();
@@ -22,6 +31,7 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarLabel: TabLabel,
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.textTertiary,
         tabBarStyle: { backgroundColor: colors.backgroundSurface, borderTopColor: colors.border },
