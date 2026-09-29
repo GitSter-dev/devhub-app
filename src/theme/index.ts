@@ -19,5 +19,5 @@ export { darkShadows, lightShadows, type ShadowToken, type ThemeShadows } from "
 export { spacing, layoutSpacing, type SpacingToken } from "./spacing";
 export { ThemeProvider, type ThemePreference, type ThemeContextValue } from "./theme-provider";
 export { themes, navigationTheme, type ColorScheme, type Theme } from "./themes";
-export { fontFamily, type, type TypeToken } from "./typography";
+export { fontFamily, maxFontScale, type, type TypeToken } from "./typography";
 export { useTheme, useThemeColors, useColorScheme, useThemePreference, useMotion, type MotionTokens } from "./use-theme";

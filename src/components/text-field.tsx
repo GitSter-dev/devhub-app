@@ -1,7 +1,7 @@
 import { useState, type Ref } from "react";
 import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from "react-native";
 
-import { borderWidth, componentRadius, continuous, fontFamily, hitSlop, minTouchTarget, spacing, type, useThemeColors } from "@/theme";
+import { borderWidth, componentRadius, continuous, fontFamily, hitSlop, maxFontScale, minTouchTarget, spacing, type, useThemeColors } from "@/theme";
 
 import { AppText } from "./app-text";
 import { Icon } from "./icon";
@@ -35,6 +35,7 @@ export function TextField({ label, error, hint, secure = false, mono = false, on
         ]}
       >
         <TextInput
+          maxFontSizeMultiplier={maxFontScale}
           {...input}
           ref={ref}
           accessibilityLabel={label}

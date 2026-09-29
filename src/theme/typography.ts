@@ -8,6 +8,8 @@ import type { TextStyle } from "react-native";
  * static font files, iOS otherwise synthesizes the weight or drops to the system
  * face, and the ramp stops being trustworthy.
  */
+export const maxFontScale = 1.25;
+
 export const fontFamily = {
   regular: "Inter_400Regular",
   medium: "Inter_500Medium",

@@ -7,7 +7,7 @@ import { AppText } from "@/components/app-text";
 import { Icon } from "@/components/icon";
 import { typing } from "@/chat/typing";
 import { haptics } from "@/feedback/haptics";
-import { componentRadius, fontFamily, hitSlop, layoutSpacing, minTouchTarget, spacing, type, useThemeColors } from "@/theme";
+import { componentRadius, fontFamily, hitSlop, layoutSpacing, maxFontScale, minTouchTarget, spacing, type, useThemeColors } from "@/theme";
 
 const BODY_LIMIT = 4000;
 const CODE_LIMIT = 4000;
@@ -70,6 +70,7 @@ export function ChatComposer({ conversationId, replyTo, onCancelReply, onSend }:
       {withCode && (
         <View style={styles.code}>
           <TextInput
+            maxFontSizeMultiplier={maxFontScale}
             value={code}
             onChangeText={setCode}
             placeholder="Paste or write code"
@@ -81,6 +82,7 @@ export function ChatComposer({ conversationId, replyTo, onCancelReply, onSend }:
             style={[inputStyle, styles.codeInput]}
           />
           <TextInput
+            maxFontSizeMultiplier={maxFontScale}
             value={language}
             onChangeText={setLanguage}
             placeholder="language (optional)"
@@ -104,6 +106,7 @@ export function ChatComposer({ conversationId, replyTo, onCancelReply, onSend }:
           <Icon name="code" color={withCode ? colors.accent : colors.textTertiary} />
         </Pressable>
         <TextInput
+          maxFontSizeMultiplier={maxFontScale}
           value={body}
           onChangeText={(text) => {
             setBody(text);

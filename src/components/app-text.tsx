@@ -1,6 +1,6 @@
 import { Text, type TextProps } from "react-native";
 
-import { type, useThemeColors, type ThemeColors, type TypeToken } from "@/theme";
+import { maxFontScale, type, useThemeColors, type ThemeColors, type TypeToken } from "@/theme";
 
 export type TextTone =
   | "primary"
@@ -43,6 +43,7 @@ export function AppText({
   const colors = useThemeColors();
   return (
     <Text
+      maxFontSizeMultiplier={maxFontScale}
       {...rest}
       style={[
         type[variant],
