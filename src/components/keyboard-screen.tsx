@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { layoutSpacing, maxContentWidth, spacing } from "@/theme";
@@ -8,18 +9,16 @@ export function KeyboardScreen({ children }: { children: ReactNode }) {
   const insets = useSafeAreaInsets();
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <ScrollView
+    <View style={[styles.flex, { paddingTop: insets.top }]}>
+      <KeyboardAwareScrollView
         style={styles.flex}
+        bottomOffset={spacing.xl}
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={[
-          styles.content,
-          { paddingTop: insets.top + spacing.md, paddingBottom: insets.bottom + spacing.xl },
-        ]}
+        contentContainerStyle={[styles.content, { paddingTop: spacing.md, paddingBottom: insets.bottom + spacing.xl }]}
       >
         <View style={styles.column}>{children}</View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
+    </View>
   );
 }
 

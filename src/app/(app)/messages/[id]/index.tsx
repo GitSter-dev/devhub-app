@@ -1,7 +1,8 @@
 import * as Clipboard from "expo-clipboard";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, AppState, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from "react-native";
+import { Alert, AppState, FlatList, Pressable, StyleSheet, View } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { chatApi, type ChatMessage } from "@/api/chat-api";
@@ -199,7 +200,7 @@ export default function ChatScreen() {
   return (
     <KeyboardAvoidingView
       style={[styles.screen, { backgroundColor: colors.backgroundCanvas }]}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior="padding"
     >
       <View style={[styles.header, { paddingTop: insets.top + spacing.sm, borderBottomColor: colors.border }]}>
         <Pressable accessibilityRole="button" accessibilityLabel="Back" hitSlop={hitSlop} onPress={() => router.back()} style={styles.back}>
