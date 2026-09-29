@@ -27,6 +27,7 @@ const nativeModules: Record<string, string> = {
   "react-native-gesture-handler/ReanimatedSwipeable": mock("reanimated-swipeable.tsx"),
   "react-native-gesture-handler": mock("react-native-gesture-handler.tsx"),
   "react-native-safe-area-context": mock("react-native-safe-area-context.tsx"),
+  "react-native-keyboard-controller": mock("react-native-keyboard-controller.tsx"),
 };
 
 export default defineConfig({
