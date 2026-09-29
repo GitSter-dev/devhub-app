@@ -26,7 +26,7 @@ const FIELDS = ["username", "displayName", "email", "password"] as const;
 export default function SignUpScreen() {
   const [failure, setFailure] = useState<ApiError | null>(null);
 
-  const { control, handleSubmit, setError } = useForm<UserSignupInput, unknown, UserSignupValues>({
+  const { control, handleSubmit, setError, setFocus } = useForm<UserSignupInput, unknown, UserSignupValues>({
     resolver: zodResolver(userSignupSchema),
     defaultValues: { username: "", displayName: "", email: "", password: "" },
     mode: "onTouched",
@@ -63,7 +63,7 @@ export default function SignUpScreen() {
       title="Join DevHub"
       subtitle="Claim your handle. We'll email you a code to confirm it's really you."
       footer={
-        <View style={{ flexDirection: "row", gap: spacing.xs, alignItems: "center" }}>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", columnGap: spacing.xs, alignItems: "center" }}>
           <AppText variant="subhead" tone="secondary">
             Already on DevHub?
           </AppText>
@@ -83,6 +83,9 @@ export default function SignUpScreen() {
         autoCorrect={false}
         autoComplete="username-new"
         mono
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => setFocus("displayName")}
       />
       <FormTextField
         control={control}
@@ -91,6 +94,9 @@ export default function SignUpScreen() {
         placeholder="Ada Lovelace"
         autoComplete="name"
         textContentType="name"
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => setFocus("email")}
       />
       <FormTextField
         control={control}
@@ -102,6 +108,9 @@ export default function SignUpScreen() {
         autoCorrect={false}
         autoComplete="email"
         textContentType="emailAddress"
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => setFocus("password")}
       />
       <FormTextField
         control={control}

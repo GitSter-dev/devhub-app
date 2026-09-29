@@ -34,7 +34,7 @@ export default function LogInScreen() {
   const [lastUser] = useState(() => (session.status === "reauthRequired" ? lastUserStore.read() : null));
   const [failure, setFailure] = useState<ApiError | null>(null);
 
-  const { control, handleSubmit, reset, getValues } = useForm<LoginInput, unknown, LoginValues>({
+  const { control, handleSubmit, reset, getValues, setFocus } = useForm<LoginInput, unknown, LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { identifier: lastUser?.username ?? "", password: "" },
     mode: "onTouched",
@@ -108,7 +108,7 @@ export default function LogInScreen() {
       title={lastUser ? `Welcome back, ${lastUser.displayName}` : "Welcome back"}
       subtitle={lastUser ? `Sign in as @${lastUser.username} to continue.` : "Sign in with your email or username."}
       footer={
-        <View style={{ flexDirection: "row", gap: spacing.xs, alignItems: "center" }}>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", columnGap: spacing.xs, alignItems: "center" }}>
           <AppText variant="subhead" tone="secondary">
             New to DevHub?
           </AppText>
@@ -128,6 +128,8 @@ export default function LogInScreen() {
         autoComplete="username"
         textContentType="username"
         returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => setFocus("password")}
       />
       <FormTextField
         control={control}
