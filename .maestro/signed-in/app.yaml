@@ -1,0 +1,78 @@
+appId: com.application.devhub
+name: Signed-in screens
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Next"
+    timeout: 20000
+- repeat:
+    times: 3
+    commands:
+      - tapOn: "Next"
+- scrollUntilVisible:
+    element: "I already have an account"
+    direction: DOWN
+    optional: true
+- takeScreenshot: ${OUT}/29-onboarding-last
+- tapOn: "I already have an account"
+- tapOn: "ada@devhub.dev"
+- inputText: "ada@devhub.dev"
+- pressKey: Enter
+- inputText: "correct-horse"
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: "Home"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/30-feed
+- scroll
+- takeScreenshot: ${OUT}/31-feed-scrolled
+- tapOn: "New post"
+- extendedWaitUntil:
+    visible: "What are you building?"
+    timeout: 10000
+- tapOn: "What are you building?"
+- inputText: "Checking the composer on a small screen with the keyboard open"
+- takeScreenshot: ${OUT}/40-compose-keyboard
+- tapOn:
+    text: "Code"
+    optional: true
+- takeScreenshot: ${OUT}/41-compose-code
+- hideKeyboard
+- back
+- tapOn:
+    text: "Discard"
+    optional: true
+- tapOn: "Messages"
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/50-messages
+- tapOn: "Grace Hopper"
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/51-chat
+- tapOn: "Message"
+- inputText: "Typing with the keyboard open to check the composer stays visible"
+- takeScreenshot: ${OUT}/52-chat-keyboard
+- tapOn: "Add a code block"
+- takeScreenshot: ${OUT}/53-chat-code-keyboard
+- hideKeyboard
+- back
+- tapOn: "Activity"
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/60-activity
+- tapOn: "Search"
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/70-search
+- hideKeyboard
+- tapOn: "You"
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/80-profile
+- tapOn: "Edit profile"
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/81-edit-profile
+- back
+- tapOn: "Settings"
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/90-settings
+- scroll
+- takeScreenshot: ${OUT}/91-settings-scrolled
