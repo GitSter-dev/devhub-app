@@ -1,0 +1,71 @@
+appId: com.application.devhub
+name: Onboarding and auth screens
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Next"
+    timeout: 20000
+- takeScreenshot: ${OUT}/01-onboarding-1
+- tapOn: "Next"
+- takeScreenshot: ${OUT}/02-onboarding-2
+- tapOn: "Next"
+- takeScreenshot: ${OUT}/03-onboarding-3
+- tapOn: "Next"
+- takeScreenshot: ${OUT}/04-onboarding-4
+- scrollUntilVisible:
+    element: "I already have an account"
+    direction: DOWN
+    optional: true
+- takeScreenshot: ${OUT}/05-onboarding-4-scrolled
+- tapOn: "I already have an account"
+- extendedWaitUntil:
+    visible: "Welcome back"
+    timeout: 10000
+- takeScreenshot: ${OUT}/10-login
+- tapOn: "ada@devhub.dev"
+- inputText: "grace@devhub.dev"
+- takeScreenshot: ${OUT}/11-login-keyboard-identifier
+- pressKey: Enter
+- inputText: "correct-horse"
+- takeScreenshot: ${OUT}/12-login-keyboard-password
+- hideKeyboard
+- tapOn: "Forgot password?"
+- takeScreenshot: ${OUT}/15-forgot-password
+- tapOn: ".*@devhub\\.dev"
+- takeScreenshot: ${OUT}/16-forgot-password-keyboard
+- hideKeyboard
+- back
+- extendedWaitUntil:
+    visible: "Welcome back"
+    timeout: 10000
+- scrollUntilVisible:
+    element: "Create an account"
+    direction: DOWN
+    optional: true
+- tapOn: "Create an account"
+- extendedWaitUntil:
+    visible: "Join DevHub"
+    timeout: 10000
+- takeScreenshot: ${OUT}/20-signup
+- scrollUntilVisible:
+    element: "ada_dev"
+    direction: DOWN
+    optional: true
+- tapOn: "ada_dev"
+- inputText: "grace"
+- takeScreenshot: ${OUT}/21-signup-keyboard-username
+- pressKey: Enter
+- inputText: "Grace Hopper"
+- takeScreenshot: ${OUT}/22-signup-keyboard-name
+- pressKey: Enter
+- inputText: "grace@devhub.dev"
+- takeScreenshot: ${OUT}/23-signup-keyboard-email
+- pressKey: Enter
+- inputText: "correct-horse"
+- takeScreenshot: ${OUT}/24-signup-keyboard-password
+- hideKeyboard
+- scrollUntilVisible:
+    element: "Create account"
+    direction: DOWN
+- takeScreenshot: ${OUT}/25-signup-submit-reachable
