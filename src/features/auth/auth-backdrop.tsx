@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, useWindowDimensions, View } from "react-native";
 
 import { AppText } from "@/components/app-text";
 import { useTheme } from "@/theme";
@@ -12,8 +12,13 @@ const CODE_LINES = [
   "docker compose up -d",
 ];
 
+const ROOMY_HEIGHT = 760;
+const ROOMY_FONT_SCALE = 1.1;
+
 export function AuthBackdrop() {
   const { colors, shadows } = useTheme();
+  const { height, fontScale } = useWindowDimensions();
+  const roomy = height >= ROOMY_HEIGHT && fontScale <= ROOMY_FONT_SCALE;
 
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
@@ -23,13 +28,15 @@ export function AuthBackdrop() {
           { backgroundColor: colors.backgroundAccentSubtle, boxShadow: shadows.accent },
         ]}
       />
-      <View style={styles.code}>
-        {CODE_LINES.map((line) => (
-          <AppText key={line} variant="code" tone="tertiary" numberOfLines={1} style={styles.line}>
-            {line}
-          </AppText>
-        ))}
-      </View>
+      {roomy && (
+        <View style={styles.code}>
+          {CODE_LINES.map((line) => (
+            <AppText key={line} variant="code" tone="tertiary" numberOfLines={1} style={styles.line}>
+              {line}
+            </AppText>
+          ))}
+        </View>
+      )}
     </View>
   );
 }
