@@ -53,7 +53,7 @@ export function Button({ label, onPress, variant = "primary", loading = false, d
           <ActivityIndicator color={palette.label} />
         ) : (
           <>
-            <AppText variant="subhead" style={{ color: palette.label }}>
+            <AppText variant="subhead" center style={[styles.label, { color: palette.label }]}>
               {label}
             </AppText>
             {icon && <Icon name={icon} color={palette.label} size="sm" />}
@@ -77,5 +77,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.sm,
+  },
+  label: {
+    flexShrink: 1,
   },
 });
