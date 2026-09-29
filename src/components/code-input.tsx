@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
 
-import { borderWidth, componentRadius, continuous, fontFamily, spacing, useMotion, useThemeColors } from "@/theme";
+import { borderWidth, componentRadius, continuous, fontFamily, maxFontScale, spacing, useMotion, useThemeColors } from "@/theme";
 
 import { AppText } from "./app-text";
 
@@ -76,6 +76,7 @@ export function CodeInput({ value, onChange, onComplete, shakeKey, invalid = fal
         })}
       </Animated.View>
       <TextInput
+        maxFontSizeMultiplier={maxFontScale}
         ref={inputRef}
         value={value}
         onChangeText={handleChange}
